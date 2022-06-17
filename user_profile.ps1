@@ -79,7 +79,10 @@ function dev
     # Navigate to the project home directory
     cd $UE_ProjectDirectory
 
-    Write-Host "   workspace project: $($CurrentWorkspace.ProjectPath)"
+    p4getworkspacestats  # Get p4 stats, requires dev_ue_set_paths paths and to be in the project dir
+
+    # Minimal stats of new workspace
+    stats -minimal:1
 }
 
 function dev_ue_set_paths
@@ -87,16 +90,16 @@ function dev_ue_set_paths
     #(Get-Item $CurrentWorkspace.ProjectPath) | Get-Member
 
     # cache off relevant directories for workspace
-    $global:UE_ProjectName      = (Get-Item $CurrentWorkspace.ProjectPath).BaseName
-    $global:UE_ProjectDirectory = (Get-Item $CurrentWorkspace.ProjectPath).DirectoryName
-    $global:UE_EngineScriptsDir = "$($CurrentWorkspace.EnginePath)\Engine\Build\BatchFiles"
+    $global:UE_ProjectName              = (Get-Item $CurrentWorkspace.ProjectPath).BaseName
+    $global:UE_ProjectDirectory         = (Get-Item $CurrentWorkspace.ProjectPath).DirectoryName
+    $global:UE_EngineScriptsDir         = "$($CurrentWorkspace.EnginePath)\Engine\Build\BatchFiles"
+    $global:UE_ProjectDirectoryDrive    = (Get-Item $CurrentWorkspace.ProjectPath).DirectoryName.Substring(0,3)
 
     # cache off relevant apps for workspace
     $global:UE_UAT              = "$UE_EngineScriptsDir\RunUat.bat"
     $global:UE_BuildScript      = "$UE_EngineScriptsDir\Build.bat"
     $global:UE_Insights         = "$($CurrentWorkspace.EnginePath)\Engine\Binaries\Win64\UnrealInsights.exe"
     $global:UE_BuildTool        = "$($CurrentWorkspace.EnginePath)\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.exe"
-
 
     # check to see if project is inside UE dir or project dir
     if ($($CurrentWorkspace.ProjectPath).Contains($($CurrentWorkspace.EnginePath)))
@@ -111,6 +114,46 @@ function dev_ue_set_paths
     }
 }
 
+## Print various workspace stats
+function stats
+{
+    Param
+    (
+        # preset options, will force ON options that are otherwise not on
+        [bool]  $detailed       = 0,
+        [bool]  $minimal        = 0,
+
+        # individual options that can be turned off/on
+        [bool]  $header         = 1,
+        [bool]  $workspaceSize  = 0,
+        [bool]  $workspaceCL    = 0
+    )
+
+    ## Check for presets
+    if ($detailed -ne 0)
+    {
+        $workspaceSize  = 1
+        $workspaceCL    = 1
+    }
+
+    if ($minimal -ne 0)
+    {
+        $header         = 0
+        $workspaceSize  = 0
+        $workspaceCL    = 0
+    }
+
+    ## Begin constructing stats string
+    $StatsString = ""
+    {
+    }
+    }
+    if ($workspaceCL -ne 0)
+        $StatsString += "       workspace CL: $($WrkspaceCLString)`r`n"
+
+    ## Print the stats string to the screen
+    echo $($StatsString)
+}
 
 ## Profile Maintanence
 function edit_profile
