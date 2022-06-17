@@ -145,11 +145,25 @@ function stats
 
     ## Begin constructing stats string
     $StatsString = ""
+    if ($workspaceSize -ne 0)
     {
+        $StatsString +=  "           --Workspace Stats-- `r`n"
     }
+    $StatsString += "        workspace $($global:WorkspaceLetter): $global:P4_WorkspaceClient - $global:P4_WorkspaceRoot`r`n"
+    $StatsString += "            project: $($CurrentWorkspace.ProjectPath)`r`n"
+    $StatsString += "         engine dir: $($CurrentWorkspace.EnginePath)`r`n"
+
+    if ($workspaceSize -ne 0)
+    {
+        $WorkspaceDirSize = ("{0:N2} GB" -f ((gci -force "$global:P4_WorkspaceRoot" -Recurse -ErrorAction SilentlyContinue| measure Length -s).sum / 1Gb))
+        $StatsString += "     workspace size: $($WorkspaceDirSize)`r`n"
     }
+
     if ($workspaceCL -ne 0)
+    {
+        $WrkspaceCLString = p4cl
         $StatsString += "       workspace CL: $($WrkspaceCLString)`r`n"
+    }
 
     ## Print the stats string to the screen
     echo $($StatsString)
@@ -368,6 +382,30 @@ function ugs
 function p4cl
 {
     p4 changes -m1 //...#have
+}
+
+function p4getworkspacestats
+{
+    Param
+    (
+        [bool]  $silent = 1
+    )
+
+    ### Get Workspace root
+    $WorkspaceCommandOutput = p4 where //... | Out-String
+        
+    $DriveNameStringInd = $WorkspaceCommandOutput.IndexOf($global:UE_ProjectDirectoryDrive)
+    $ReturnCharStringInd = $WorkspaceCommandOutput.IndexOf("\...", $DriveNameStringInd)
+    $global:P4_WorkspaceRoot = $WorkspaceCommandOutput.Substring($DriveNameStringInd, ($ReturnCharStringInd - $DriveNameStringInd))
+
+    ### Get Client Name
+    $global:P4_WorkspaceClient = p4 -Ztag -F %clientName% info
+
+    if ($silent -eq 0)
+    {
+        echo "  p4 workspace root: $global:P4_WorkspaceRoot"
+        echo "          p4 client: $global:P4_WorkspaceClient"
+    }
 }
 
 # sync to a supplied CL, or to latest if none is supplied
