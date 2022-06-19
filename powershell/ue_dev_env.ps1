@@ -1,20 +1,44 @@
-# Use this file to run your own startup commands
+# Copyright Timothy Rawcliffe
+# UE Development Environment powershell script!
+#
+# To install: 
+#   1. Put ue_dev_env.ps1, ue_dev_env_config.ps1 and ue_dev_env.omp.json in the same directory as your user_profile.ps1
+#   2. Add this line to user_profile.ps1:   . $PSScriptRoot\ue_dev_env.ps1
+#   3. See the config file to setup directories and workspaces for your environment.
+#
+# Additional notes:
+#   * Best if used with Oh My Posh command line below
+#   * Font intended for use: CaskaydiaCove NF
+#   * CMDER Color Palette at time of creation: Monokai
+
+# Useful fonts and powershell tips - https://www.hanselman.com/blog/my-ultimate-powershell-prompt-with-oh-my-posh-and-the-windows-terminal
 
 # Save off this script and the user profile config path
-$script_path_user_profile           = "$Env:CMDER_ROOT\config\user_profile.ps1"
-$script_path_user_profile_config    = "$Env:CMDER_ROOT\config\user_profile_config.ps1"
+$script_path            = "$PSScriptRoot\ue_dev_env.ps1"
+$script_config_path     = "$PSScriptRoot\ue_dev_env_config.ps1"
+$omp_theme_path         = "$PSScriptRoot\ue_dev_env.omp.json"
 
 ## Load in config
-. "$script_path_user_profile_config"
+. "$script_config_path"
 
+## Oh my posh terminal stuff - https://ohmyposh.dev/docs/
+# NOTE: For use with CMDER, you must remove a function prompt read only flag in vendor\profile.ps1. - Details here: https://github.com/lukesampson/pshazz/issues/100
+function omp_reload
+{
+    oh-my-posh --init --shell pwsh --config "$omp_theme_path" | Invoke-Expression
+}
 
+omp_reload
 
+## Terminal Icons setup - if not installed, install with the following comamnd:
+# Install-Module -Name Terminal-Icons -Repository PSGallery
+Import-Module -Name Terminal-Icons
 
 # Replace the cmder prompt entirely with this.
-[ScriptBlock]$CmderPrompt = { 
-    Microsoft.PowerShell.Utility\Write-Host "Dev$WorkspaceLetter " -NoNewLine -ForegroundColor "DarkGreen"
-    Microsoft.PowerShell.Utility\Write-Host (Get-Location)">" -NoNewLine -ForegroundColor "DarkGray"
-}
+# [ScriptBlock]$CmderPrompt = { 
+#     Microsoft.PowerShell.Utility\Write-Host "Dev$WorkspaceLetter " -NoNewLine -ForegroundColor "DarkGreen"
+#     Microsoft.PowerShell.Utility\Write-Host (Get-Location)">" -NoNewLine -ForegroundColor "DarkGray"
+# }
 
 # Aliases for configs
 $BuildConfigs = @(
@@ -71,7 +95,7 @@ function dev
         default { Write-Host "**Called Dev with unimplemented workspace ID"; return; }
     }
 
-    $global:WorkspaceLetter = "$workspaceID".ToUpper()
+    $env:WRKSPACE_LETTER = "$workspaceID".ToUpper()
 
     # Set all the paths
     dev_ue_set_paths
@@ -112,6 +136,10 @@ function dev_ue_set_paths
         # Project is in it's own directory, use Proejct .sln in project dir
         $global:UE_VSSolution = "$UE_ProjectDirectory\$UE_ProjectName.sln"
     }
+
+    # Kind of a hack. Functions don't pass return code nicely and I want to put the code from function envokations in the OMP cmd line.
+    #   init to a reasonable default here and then set this after each import call
+    $env:LASTEXITCODE = 0
 }
 
 ## Print various workspace stats
@@ -149,7 +177,7 @@ function stats
     {
         $StatsString +=  "           --Workspace Stats-- `r`n"
     }
-    $StatsString += "        workspace $($global:WorkspaceLetter): $global:P4_WorkspaceClient - $global:P4_WorkspaceRoot`r`n"
+    $StatsString += "        workspace $($env:WRKSPACE_LETTER): $global:P4_WorkspaceClient - $global:P4_WorkspaceRoot`r`n"
     $StatsString += "            project: $($CurrentWorkspace.ProjectPath)`r`n"
     $StatsString += "         engine dir: $($CurrentWorkspace.EnginePath)`r`n"
 
@@ -170,20 +198,25 @@ function stats
 }
 
 ## Profile Maintanence
-function edit_profile
+function env_script_edit
 {
-    . $AppPaths.TextEditor $script_path_user_profile
+    . $AppPaths.TextEditor $script_path
 }
 
-function edit_profile_config
+function env_config_edit
 {
-    . $AppPaths.TextEditor $script_path_user_profile_config
+    . $AppPaths.TextEditor $script_config_path
 }
 
-function reload_profile
+function env_omp_edit
 {
-    echo ". $script_path_user_profile"
-    . $script_path_user_profile
+    . $AppPaths.TextEditor $omp_theme_path
+}
+
+function env_script_reload
+{
+    echo ". $script_path"
+    . $script_path
 }
 
 ## UE stuff - Building
@@ -230,14 +263,16 @@ function build
         default { Write-Host "**HOW DID YOU GET HERE?!"; return; }
     }
 
-    $BuildCommand = ". $UE_BuildScript $BuildProjectName Win64 $BuildSpecID -waitmutex"
+    $BuildCommand = ". $UE_BuildScript $BuildProjectName Win64 $BuildSpecID $($CurrentWorkspace.ProjectPath) -waitmutex"
 
     Microsoft.PowerShell.Utility\Write-Host "    BUILD: " -NoNewLine -ForegroundColor "DarkCyan"
     Microsoft.PowerShell.Utility\Write-Host "$BuildConfigID - $BuildSpecID" -ForegroundColor "Cyan"
     Microsoft.PowerShell.Utility\Write-Host "  command: " -NoNewLine -ForegroundColor "DarkCyan"
     Microsoft.PowerShell.Utility\Write-Host "'$BuildCommand'" -ForegroundColor "Cyan"
 
-    Invoke-Expression $BuildCommand
+    Invoke-Expression -Command $BuildCommand
+    $env:LASTEXITCODE = $global:LASTEXITCODE
+    #Start-Process -FilePath "$UE_BuildScript" -ArgumentList "$BuildProjectName Win64 $BuildSpecID $($CurrentWorkspace.ProjectPath) -waitmutex" -NoNewWindow -Wait -PassThru
 }
 
 function cook
@@ -384,12 +419,28 @@ function p4cl
     p4 changes -m1 //...#have
 }
 
+function p4clean
+{
+    p4 clean -ade -I
+}
+
 function p4getworkspacestats
 {
     Param
     (
         [bool]  $silent = 1
     )
+    
+    ### Get Client Name
+    $global:P4_WorkspaceClient = p4 -Ztag -F %clientName% info
+
+    ## Check Login Status, ask to login if not logged in
+    $LoginStatusOutput = p4 login -s 2>&1 | Out-String
+    if ( -not($LoginStatusOutput -like "*ticket expires*")) # looking for part of success string "user xxx logged in and ticket expires in YY mins"
+    {
+        echo " Not logged into perfoce client associated with '$global:P4_WorkspaceClient' Please enter password"
+        p4login
+    }
 
     ### Get Workspace root
     $WorkspaceCommandOutput = p4 where //... | Out-String
@@ -398,8 +449,6 @@ function p4getworkspacestats
     $ReturnCharStringInd = $WorkspaceCommandOutput.IndexOf("\...", $DriveNameStringInd)
     $global:P4_WorkspaceRoot = $WorkspaceCommandOutput.Substring($DriveNameStringInd, ($ReturnCharStringInd - $DriveNameStringInd))
 
-    ### Get Client Name
-    $global:P4_WorkspaceClient = p4 -Ztag -F %clientName% info
 
     if ($silent -eq 0)
     {

@@ -1,0 +1,135 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+  "blocks": [
+    {
+      "alignment": "left",
+      "newline": true,
+      "segments": [
+        {
+          "background": "#00cccc",
+          "foreground": "#ffffff",
+          "leading_diamond": "\ue0b6",
+          "properties": {
+            "display_host": true
+          },
+          "style": "diamond",
+          "template":"\uf1ae {{ .UserName }}<#bbbbbb>@</><#ffffff>{{ .HostName }}</>",
+          "type": "session"
+        },
+        {
+          "background": "#00ffff",
+          "foreground": "#ffffff",
+          "powerline_symbol": "\ue0b8 ",
+          "style": "powerline",
+          "template": "\uf11b  Dev{{ .Env.WRKSPACE_LETTER }}",
+          "type": "text"
+        },
+        {
+          "background": "#44ccff",
+          "foreground": "#ffffff",
+          "properties": {
+            "folder_separator_icon": "/",
+            "home_icon": "~",
+            "max_depth": 2,
+            "style": "agnoster_short"
+          },
+          "style": "diamond",
+          "trailing_diamond": "\ue0b0",
+          "template": "\ue5fe {{ .Path }}",
+          "type": "path"
+        },
+        {
+          "background": "#fffb38",
+          "background_templates": [
+            "{{ if or (.Working.Changed) (.Staging.Changed) }}#ff9248{{ end }}",
+            "{{ if and (gt .Ahead 0) (gt .Behind 0) }}#f26d50{{ end }}",
+            "{{ if gt .Ahead 0 }}#f17c37{{ end }}",
+            "{{ if gt .Behind 0 }}#89d1dc{{ end }}"
+          ],
+          "foreground": "#193549",
+          "powerline_symbol": "\ue0b0",
+          "properties": {
+            "fetch_stash_count": true,
+            "fetch_status": true,
+            "fetch_upstream_icon": true
+          },
+          "style": "powerline",
+          "template": " {{ .UpstreamIcon }}{{ .HEAD }}{{ .BranchStatus }}{{ if .Staging.Changed }} \uf046 {{ .Staging.String }}{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Working.Changed }} \uf044 {{ .Working.String }}{{ end }}{{ if gt .StashCount 0 }} \uf692 {{ .StashCount }}{{ end }} ",
+          "type": "git"
+        },
+        {
+          "foreground": "#00cccc",
+          "style": "plain",
+          "template": " {{if .Root}}\uf25b{{else}}\uf0a4{{end}} ",
+          "type": "text"
+        }
+      ],
+      "type": "prompt"
+    },
+    {
+      "segments": [
+        {
+          "foreground": "#ffffff",
+          "properties": {
+            "always_enabled": true
+          },
+          "style": "plain",
+          "template": "{{ if eq .Env.LASTEXITCODE \"0\" }}<#00cc00>\uf633 </>{{ else }}<#cc0000>\uf659 </>{{ end }}",
+          "type": "text"
+        },
+        {
+          "foreground": "#ffffff",
+          "properties": {
+            "always_enabled": true
+          },
+          "invert_powerline": true,
+          "powerline_symbol": "\ue0b2",
+          "style": "plain",
+          "template": "{{ .FormattedMs }} ",
+          "type": "executiontime"
+        },
+        {
+          "background": "#992299",
+          "foreground": "#ffffff",
+          "leading_diamond": "\ue0b6",
+          "style": "diamond",
+          "template": "\uf85a {{ round .PhysicalPercentUsed .Precision }}% \ue266 {{ (div ((sub .PhysicalTotalMemory .PhysicalFreeMemory)|float64) 1000000000.0) }}/{{ (div .PhysicalTotalMemory 1000000000.0) }}GB",
+          "type": "sysinfo"
+        },
+        {
+          "background_templates": [
+            "{{if gt .Percentage 80}}#00ff00{{end}}",
+            "{{if gt .Percentage 50}}#00cc00{{end}}",
+            "{{if gt .Percentage 20}}#b6b649{{end}}",
+            "{{if gt .Percentage 0}}#cc0000{{end}}"
+          ],
+          "foreground": "#ffffff",
+          "powerline_symbol": "\ue0b8 ",
+          "properties": {
+            "charged_icon": "\uf583 ",
+            "charging_icon": "\uf588 ",
+            "discharging_icon": "\uf57d "
+          },
+          "style": "powerline",
+          "template": "{{ if not .Error }}{{ .Icon }}{{ .Percentage }}{{ end }}{{ .Error }}%",
+          "type": "battery"
+        },
+        {
+          "background": "#dd00dd",
+          "foreground": "#ffffff",
+          "properties": {
+            "time_format": "Mon 15:04"
+          },
+          "style": "diamond",
+          "template": "{{ .CurrentDate | date .Format }}",
+          "trailing_diamond": "\ue0b4",
+          "type": "time"
+        }
+      ],
+      "type": "rprompt"
+    }
+  ],
+  "console_title_template": "{{.UserName}}@{{.HostName}} : {{.Folder}}",
+  "final_space": true,
+  "version": 2
+}
