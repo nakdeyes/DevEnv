@@ -91,9 +91,9 @@
         {
           "background": "#992299",
           "foreground": "#ffffff",
-          "powerline_symbol": "\ue0b8 ",
-          "style": "powerline",
-          "template": "\uf85a {{ round .PhysicalPercentUsed .Precision }}% \ue266 {{ (div ((sub .PhysicalTotalMemory .PhysicalFreeMemory)|float64) 1000000000.0) }}/{{ (div .PhysicalTotalMemory 1000000000.0) }}GB",
+          "leading_diamond": "\ue0b6",
+          "style": "plain",
+          "template": "<background,transparent>\ue0b6</>\uf85a {{ round .PhysicalPercentUsed .Precision }}% \ue266 {{ (div ((sub .PhysicalTotalMemory .PhysicalFreeMemory)|float64) 1000000000.0) }}/{{ (div .PhysicalTotalMemory 1000000000.0) }}GB",
           "type": "sysinfo"
         },
         {
@@ -110,8 +110,8 @@
             "charging_icon": "\uf588 ",
             "discharging_icon": "\uf57d "
           },
-          "style": "powerline",
-          "template": "{{ if not .Error }}{{ .Icon }}{{ .Percentage }}{{ end }}{{ .Error }}%",
+          "style": "plain",
+          "template": "<parentBackground,background>\ue0b8 </>{{ if not .Error }}{{ .Icon }}{{ .Percentage }}{{ end }}{{ .Error }}%",
           "type": "battery"
         },
         {
@@ -120,8 +120,8 @@
           "properties": {
             "time_format": "Mon 15:04"
           },
-          "style": "diamond",
-          "template": "{{ .CurrentDate | date .Format }}",
+          "style": "plain",
+          "template": "<parentBackground,background>\ue0b8 </>{{ .CurrentDate | date .Format }}<background,transparent>\ue0b4</>",
           "trailing_diamond": "\ue0b4",
           "type": "time"
         }
