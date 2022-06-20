@@ -31,7 +31,7 @@ function omp_reload
 omp_reload
 
 ## Terminal Icons setup - if not installed, install with the following comamnd:
-# Install-Module -Name Terminal-Icons -Repository PSGallery
+# Install-Module -Name Terminal-Icons -Repository PSGallery -Scope CurrentUser
 Import-Module -Name Terminal-Icons
 
 # Replace the cmder prompt entirely with this.
@@ -195,6 +195,14 @@ function stats
 
     ## Print the stats string to the screen
     echo $($StatsString)
+}
+
+function env_install_prereqs()
+{
+    Write-Host " **** Installing Prereq - OhMyPosh **** "
+    winget install JanDeDobbeleer.OhMyPosh
+    Write-Host " **** Installing Prereq - Terminal-Icons **** "
+    Install-Module -Name Terminal-Icons -Repository PSGallery -Scope CurrentUser
 }
 
 ## Profile Maintanence
@@ -493,6 +501,22 @@ function p4sync
 function p4login
 {
     p4 login
+}
+
+## PS5 stuff
+function PS5Deploy
+{
+    Param
+    (
+        [int]$buildNum   = 0
+    )
+
+    # Need to run the script out of it's own directory
+    $script_dir = "$global:P4_WorkspaceRoot\Tools\Bin\WorkflowTools\Propper"
+    Write-Host "Deploy PS5 build # $buildNum ... "
+    Push-Location $script_dir
+    .\install_ps5_build.cmd $buildNum
+    Pop-Location
 }
 
 ## Windows stuff
