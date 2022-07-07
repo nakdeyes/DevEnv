@@ -199,10 +199,39 @@ function stats
 
 function env_install_prereqs()
 {
+    # run as admin
+    if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))  
+    {  
+        $arguments = "& '" +$myinvocation.mycommand.definition + "'"
+        Start-Process powershell -Verb runAs -ArgumentList $arguments
+        Break
+    }
+
     Write-Host " **** Installing Prereq - OhMyPosh **** "
     winget install JanDeDobbeleer.OhMyPosh
     Write-Host " **** Installing Prereq - Terminal-Icons **** "
     Install-Module -Name Terminal-Icons -Repository PSGallery -Scope CurrentUser
+    Write-Host " **** Installing Prereq - CascadiaCode fonts **** "
+
+    $TempZipDir = "$PSScriptRoot\assets\temp"
+    echo "temp zip dir: $TempZipDir"
+    Get-ChildItem -Path "$TempZipDir" -Recurse | Remove-Item -force -recurse
+    Expand-Archive "$PSScriptRoot\assets\CascadiaCode.zip" -DestinationPath "$TempZipDir"
+    sleep 2
+    Push-Location "$TempZipDir"
+    $fonts = (New-Object -ComObject Shell.Application).Namespace(0x14)
+    foreach ($file in gci *.ttf)
+    {
+        $fileName = $file.Name
+        if (-not(Test-Path -Path "C:\Windows\fonts\$fileName" )) {
+            echo $fileName
+            dir $file | %{ $fonts.CopyHere($_.fullname) }
+        }
+    }
+    cp *.ttf c:\windows\fonts\
+    Pop-Location
+    Get-ChildItem -Path "$TempZipDir" -Recurse | Remove-Item -force -recurse
+    Remove-Item "$TempZipDir" -Force 
 }
 
 ## Profile Maintanence
