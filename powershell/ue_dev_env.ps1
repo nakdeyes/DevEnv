@@ -340,7 +340,9 @@ function run
     (
         [string]$buildConfig    = "cli",
         [string]$buildSpec      = "dev",
-        [bool]$useInsights      = 0
+        [bool]$useInsights      = 0,
+        [bool]$replay           = 0,
+        [bool]$clientConnect    = 1
     )
 
     $BuildConfigID = Get-ID-From-Alias $BuildConfigs $buildConfig
@@ -364,7 +366,14 @@ function run
 
     switch ($BuildConfigID)
     {   
-        "Client" { $ConfigRunCommand = "$($UE_ProjectName).exe 127.0.0.1 ? service_uri=premium.firewalkcloud.com -WINDOWED -ResX=1280 -ResY=720 -WinX=0 -WinY=30" }
+        "Client" { 
+            $ConfigRunCommand = "$($UE_ProjectName).exe" 
+            if ($clientConnect -eq 1)
+            {
+                $ConfigRunCommand = $ConfigRunCommand + " 127.0.0.1 ? service_uri=premium.firewalkcloud.com"
+            }
+            $ConfigRunCommand = $ConfigRunCommand + " -WINDOWED -ResX=1280 -ResY=720 -WinX=0 -WinY=30"
+        }
         "Server" { $ConfigRunCommand = "$($UE_ProjectName)Server.exe" }
         default { Write-Host "**HOW DID YOU GET HERE?!"; return; }
     }
@@ -374,6 +383,11 @@ function run
     {
         #$RunCommand = $RunCommand + " -trace=`"cpu,frame,bookmark,memory,loadtime`" -statnamedevents -loadtimetrace -tracehost=127.0.0.1"
         $RunCommand = $RunCommand + " -trace=`"cpu,frame,bookmark`" -statnamedevents -tracehost=127.0.0.1"
+    }
+
+    if ($replay -eq 1)
+    {
+        $RunCommand = $RunCommand + " -pmreplay"
     }
 
     Microsoft.PowerShell.Utility\Write-Host "      RUN: " -NoNewLine -ForegroundColor "DarkCyan"
@@ -581,6 +595,11 @@ dev a
 ### Iterative Cook
 ## D:\UE4\SBUE\Win\Engine\Build\BatchFiles/RunUAT BuildCookRun -project="D:\w\87c67ea3ba86a5c5\supreme_blitheness\Anacrusis.uproject" -noP4 -unattended -platform="Win64" -build -clientconfig="Development" -cook -cookflavor=multi -iterativecooking   -withEditor
 
+### Restart Computer remotely
+## Restart-Computer -ComputerName "TRAWCLIFFE-DEV1" -Force
+
+### Force restart Remote Desktop services
+# Get-Service -ComputerName TRAWCLIFFE-DEV1 -Name "Remote Desktop Services" | Restart-Service -Force
 
 function TestOutput
 {
