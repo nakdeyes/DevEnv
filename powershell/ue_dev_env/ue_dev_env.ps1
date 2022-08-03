@@ -122,6 +122,7 @@ function dev_ue_set_paths
     # cache off relevant apps for workspace
     $global:UE_UAT              = "$UE_EngineScriptsDir\RunUat.bat"
     $global:UE_BuildScript      = "$UE_EngineScriptsDir\Build.bat"
+    $global:UE_Editor           = "$($CurrentWorkspace.EnginePath)\Engine\Binaries\Win64\UnrealEditor.exe"
     $global:UE_Insights         = "$($CurrentWorkspace.EnginePath)\Engine\Binaries\Win64\UnrealInsights.exe"
     $global:UE_BuildTool        = "$($CurrentWorkspace.EnginePath)\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.exe"
 
@@ -196,6 +197,38 @@ function stats
     ## Print the stats string to the screen
     echo $($StatsString)
 }
+
+function Convert-Size {            
+[cmdletbinding()]            
+param(            
+    [validateset("Bytes","KB","MB","GB","TB")]            
+    [string]$From,            
+    [validateset("Bytes","KB","MB","GB","TB")]            
+    [string]$To,            
+    [Parameter(Mandatory=$true)]            
+    [double]$Value,            
+    [int]$Precision = 4            
+)            
+switch($From) {            
+    "Bytes" {$value = $Value }            
+    "KB" {$value = $Value * 1024 }            
+    "MB" {$value = $Value * 1024 * 1024}            
+    "GB" {$value = $Value * 1024 * 1024 * 1024}            
+    "TB" {$value = $Value * 1024 * 1024 * 1024 * 1024}            
+}            
+            
+switch ($To) {            
+    "Bytes" {return $value}            
+    "KB" {$Value = $Value/1KB}            
+    "MB" {$Value = $Value/1MB}            
+    "GB" {$Value = $Value/1GB}            
+    "TB" {$Value = $Value/1TB}            
+            
+}            
+            
+return [Math]::Round($value,$Precision,[MidPointRounding]::AwayFromZero)            
+            
+}  
 
 function env_install_prereqs()
 {
@@ -371,7 +404,8 @@ function run
         [string]$buildSpec      = "dev",
         [bool]$useInsights      = 0,
         [bool]$replay           = 0,
-        [bool]$clientConnect    = 1
+        [bool]$clientConnect    = 1,
+        [bool]$log              = 1
     )
 
     $BuildConfigID = Get-ID-From-Alias $BuildConfigs $buildConfig
@@ -380,12 +414,6 @@ function run
         Write-Host " !!! run given a config it does not understand ('$buildConfig'). Doing Nothing! Please select 'client', 'server' or some other supported build config."
         return
     }
-    if ($BuildConfigID -ieq "Editor")
-    {
-        Write-Host " !!! run for the editor as a config is not really supported. Try 'client' or 'server' "
-        return
-    }
-
     $BuildSpecID = Get-ID-From-Alias $BuildSpecs $buildSpec
     if ($BuildSpecID -ieq $ERR)
     {
@@ -404,10 +432,21 @@ function run
             $ConfigRunCommand = $ConfigRunCommand + " -WINDOWED -ResX=1280 -ResY=720 -WinX=0 -WinY=30"
         }
         "Server" { $ConfigRunCommand = "$($UE_ProjectName)Server.exe" }
+        "Editor" {
+
+            $ConfigRunCommand = "UnrealEditor.exe"
+            Invoke-Expression "$($global:UE_Editor) $($global:UE_ProjectName)"
+            return  # editor is pretty bespoke so just launch it from here
+        }
         default { Write-Host "**HOW DID YOU GET HERE?!"; return; }
     }
 
-    $RunCommand = ". $($UE_ProjectDirectory)\Binaries\Win64\$($ConfigRunCommand) -log"
+    $RunCommand = ". $($UE_ProjectDirectory)\Binaries\Win64\$($ConfigRunCommand)"
+    if ($log -eq 1)
+    {
+        $RunCommand = $RunCommand + " -log"
+    }
+
     if ($useInsights -eq 1)
     {
         #$RunCommand = $RunCommand + " -trace=`"cpu,frame,bookmark,memory,loadtime`" -statnamedevents -loadtimetrace -tracehost=127.0.0.1"
@@ -454,6 +493,24 @@ function vs
 function ueInsights
 {
     . $UE_Insights
+}
+
+function ueCommandlet
+{
+    # Could upgrade to this approach if we want the output to not go to it's own window that auto-closes
+    Param
+    (
+        [string]$commandlet    = "*none*"
+    )
+
+    if ($commandlet -eq "*none*")
+    {
+        Write-Output " ueCommandlet did not detect a valid commandlet name. Please supply a valid commandlet name as a parameter to this function."
+        return
+    }
+    [string]$commandletExpression = ". $($global:UE_Editor) $($global:UE_ProjectName) -run=$($commandlet) | Out-Null"
+    Write-Output "  Running Commandlet '$($commandlet)' with expression: '$($commandletExpression)'"
+    Invoke-Expression $commandletExpression
 }
 
 # Open Unreal Game Sync, should open from project directory to pick up P4 Config stuff
@@ -546,6 +603,107 @@ function p4login
     p4 login
 }
 
+# A very specific function to find - what is the newest changelist with a purged file? This helps you find out
+# how far back in time you can go given a workspace with +S revisions history
+function p4NewestPurged
+{
+    Param
+    (
+        [string]$p4Path     = "//chaos/main/Unreal/...",
+        [string]$match_pattern = "purge change",
+        [string]$not_match_pattern = "BuiltData|Subtitles",
+        [int]$debugSpew = 0
+    )
+
+    #init
+    [int]$matchPatternLen = $match_pattern.Length + 1
+    [int]$newestPurgedCL = 0
+    [string]$newestPurgedFileInfo = ""
+    [int]$filecounter = 0
+
+    [string]$P4Command = "p4 files -a $($p4Path)"
+    Write-Output "Running Expression: '$($P4Command)' - include '$($match_pattern)' - exclude '$($not_match_pattern)'"
+    Invoke-Expression $P4Command | Select-String -Pattern $match_pattern | Select-String -Pattern $not_match_pattern -NotMatch | ForEach-Object { 
+        $filecounter = $filecounter + 1
+        [string]$foundString = $_.ToString()
+        [int]$purgeChangeInd = $foundString.IndexOf($match_pattern) + $matchPatternLen
+        [int]$nextSpace = $foundString.IndexOf(" ", $purgeChangeInd)
+        [int]$Changelist = $foundString.Substring($purgeChangeInd, $nextSpace - $purgeChangeInd)
+        [bool]$newest = ($newestPurgedCL -lt $Changelist)
+        if ($newest)
+        {
+            $newestPurgedCL = $Changelist
+            $newestPurgedFileInfo = $foundString
+        }
+
+        if ($newest)
+        {
+            Write-Output "newest purged file $($filecounter) - CL '$($Changelist)' - $($foundString)" 
+        }
+        elseif ($debugSpew)
+        {
+            Write-Output "              file $($filecounter) - CL '$($Changelist)' - $($foundString)" 
+        }
+    }
+
+    Write-Output ""
+    Write-Output " Newest file CL with Purged file - CL# $($newestPurgedCL) "
+    Write-Output " File Info:"
+    Write-Output "      $($newestPurgedFileInfo)"
+    Write-Output " CL# $($newestPurgedCL) Info:"
+    Invoke-Expression "p4 describe -s $($newestPurgedCL)"
+}
+
+function p4DepotSize
+{
+    Param
+    (
+        [string]$p4Path     = "//chaos/main/Unreal/...",
+        [int]$allrevisions  = 0,
+        [int]$server_size   = 0,
+        [int]$debugSpew     = 0
+    )
+
+    # init
+    [uint64]$TotalBytes = 0
+    [uint64]$TotalRevisions = 0
+
+    # create command
+    [string]$P4Command = "p4 sizes"
+    if ($server_size -ne 0)
+    {
+        $P4Command = $P4Command + " -z"
+    }
+    else 
+    {
+        $P4Command = $P4Command + " -s"
+    }
+
+    if ($allrevisions -ne 0)
+    {
+        $P4Command = $P4Command + " -a"
+    }
+    $P4Command = $P4Command + " $($p4Path)"
+    
+    Write-Output "Running Expression: '$($P4Command)'"
+    Invoke-Expression $P4Command | ForEach-Object {
+        [string]$OutputStr = $_.ToString()
+        [int]$bytesInd = $OutputStr.LastIndexOf("bytes")
+        [int]$bytesNumStartInd = $OutputStr.LastIndexOf(" ", $bytesInd - 2)
+        $TotalBytes = [uint64]$OutputStr.Substring($bytesNumStartInd, ($bytesInd - $bytesNumStartInd))
+
+        [int]$filesInd = $OutputStr.LastIndexOf("files")
+        [int]$filesNumStartInd = $OutputStr.LastIndexOf(" ", $filesInd - 2)
+        $TotalRevisions = [uint64]$OutputStr.Substring($filesNumStartInd, ($filesInd - $filesNumStartInd))
+    }
+
+    Write-Output ""
+    [string]$SizeMB = Convert-Size -From Bytes -To MB $($TotalBytes) -Precision 2
+    [string]$SizeGB = Convert-Size -From Bytes -To GB $($TotalBytes) -Precision 2
+    Write-Output ""
+    Write-Output " Revisions Counted: $TotalRevisions .. Bytes Counted: $TotalBytes .. $SizeMB MB .. $SizeGB GB"
+}
+
 ## PS5 stuff
 function PS5Deploy
 {
@@ -593,6 +751,7 @@ function kue
 {
     Invoke-Expression "taskkill.exe /im $($UE_ProjectName).exe /t /f | Out-Null" 
     Invoke-Expression "taskkill.exe /im $($UE_ProjectName)Server.exe /t /f | Out-Null"
+    Invoke-Expression "taskkill.exe /im UnrealEditor.exe /t /f | Out-Null"
 }
 
 function hard_restart
