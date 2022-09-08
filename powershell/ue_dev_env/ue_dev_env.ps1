@@ -612,6 +612,7 @@ function p4NewestPurged
         [string]$p4Path     = "//chaos/main/Unreal/...",
         [string]$match_pattern = "purge change",
         [string]$not_match_pattern = "BuiltData|Subtitles",
+        [string]$not_match_pattern = "BuiltData|Subtitles|ContentSource",
         [int]$debugSpew = 0
     )
 
@@ -652,6 +653,97 @@ function p4NewestPurged
     Write-Output "      $($newestPurgedFileInfo)"
     Write-Output " CL# $($newestPurgedCL) Info:"
     Invoke-Expression "p4 describe -s $($newestPurgedCL)"
+}
+
+function p4GetAverageRevisionSize
+{
+    Param
+    (
+        [string]$p4Path     = ""
+    )
+
+    # look up count of non-purged revisions, get server size of all non-purged revisions, divide!
+    [string]$P4Command = "p4 sizes -a -z $($p4Path)"
+    [string]$CommandOutput = Invoke-Expression $P4Command
+
+    [int]$filesInd = $CommandOutput.LastIndexOf("files")
+    [int]$prevSpace = $CommandOutput.LastIndexOf(" ", $filesInd - 2)
+    [int]$bytesInd = $CommandOutput.LastIndexOf("bytes")
+
+    [int]$filecount = $CommandOutput.Substring($prevSpace + 1, $filesInd - $prevSpace - 2)
+    [int]$totalsize = $CommandOutput.Substring($filesInd + 6, $bytesInd - $filesInd - 7)
+    [int]$averagesize = $totalsize / $filecount
+
+    Write-Host "Estimating filesize for: $($p4Path) "
+    Write-Host " - output: $($CommandOutput)"
+    Write-Host " - file count: '$($filecount)' revisions"
+    Write-Host " - total size: '$($totalsize)' bytes"
+    Write-Host " - avrge size: '$($averagesize)' bytes"
+
+    Write-Output $averagesize
+}
+
+function p4EstimatePurged
+{
+    Param
+    (
+        [string]$p4Path     = "//Chaos/main/Unreal/Chaos/Content/Env/Wilds/Skale/Revolt/Prefabs/WLDS_REV_Res_Bldg_A_PFB.uasset",
+        [string]$p4RevisionSel = "@2022/03/01,2022/08/01",
+        [string]$match_pattern = "purge change",
+        [string]$not_match_pattern = "BuiltData|Subtitles|ContentSource",
+        [int]$debugSpew = 1
+    )
+
+    [string]$P4Command = "p4 sizes -a -z -H $($p4Path)$($p4RevisionSel)"
+
+    Write-Output " Looking at files '$($p4Path)' across Revisions '$($p4RevisionSel)'"
+    Write-Output ""
+    Write-Output ""
+    Write-Output "     Server sizes w/ purges estimated with command '$($P4Command)'"
+    Write-Output ""
+    Invoke-Expression $P4Command
+    Write-Output ""
+    Write-Output ""
+    
+    $P4Command = "p4 files -a $($p4Path)$($p4RevisionSel)"
+    Write-Output "     Gathering all revisions in range with command '$($P4Command)'"
+    Write-Output ""
+
+    $RevisionsHash = @{}
+
+    [int]$revisioncounter = 0
+    Invoke-Expression $P4Command | Select-String -Pattern $match_pattern | Select-String -Pattern $not_match_pattern -NotMatch | ForEach-Object {
+        $revisioncounter = $revisioncounter + 1
+        [string]$foundString = $_.ToString()
+
+        [string]$assetName = $foundString.Substring(0, $foundString.IndexOf("#"))
+
+        if ($RevisionsHash.ContainsKey($assetName))
+        {
+            $RevisionsHash[$assetName].purgedRevs = $RevisionsHash[$assetName].purgedRevs + 1
+        }
+        else
+        {
+            $RevisionsHash[$assetName] = @{}
+            $RevisionsHash[$assetName].purgedRevs = 1
+            $RevisionsHash[$assetName].averageSize = p4GetAverageRevisionSize -p4Path:$assetName
+        }
+
+        if ($debugSpew)
+        {
+            Write-Output "          rev: $($foundString)"
+            Write-Output "   asset name: $($assetName)"
+            Write-Output "  purged revs: '$($RevisionsHash[$assetName].purgedRevs)'"
+            Write-Output " average size: '$($RevisionsHash[$assetName].averageSize)'"
+        }
+    }
+    Write-Output " Found $($revisioncounter) purged revisions on files '$($p4Path)$($p4RevisionSel)'"
+    Write-Output "    Number of Hash Entries: $($RevisionsHash.count)"
+
+    ## Iterate over all files from p4path
+    ## Look at all revisions in RevisionSel
+    ## If not purged files: just do p4 sizes -a -z on files and add together
+    ## If a purged file is found: Find average of each delta for non-purged and add in estimated per revision * num revisions purged
 }
 
 function p4DepotSize
