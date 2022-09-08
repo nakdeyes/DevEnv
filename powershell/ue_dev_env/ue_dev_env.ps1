@@ -611,7 +611,6 @@ function p4NewestPurged
     (
         [string]$p4Path     = "//chaos/main/Unreal/...",
         [string]$match_pattern = "purge change",
-        [string]$not_match_pattern = "BuiltData|Subtitles",
         [string]$not_match_pattern = "BuiltData|Subtitles|ContentSource",
         [int]$debugSpew = 0
     )
