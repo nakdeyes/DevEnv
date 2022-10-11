@@ -41,17 +41,23 @@ Import-Module -Name Terminal-Icons
 # }
 
 # Aliases for configs
-$BuildConfigs = @(
+$BuildSpecs = @(
 [PSCustomObject]@{ ID = 'Client'; Aliases = @('c', 'cli', 'client')},
 [PSCustomObject]@{ ID = 'Server'; Aliases = @('s', 'serv', 'server')},
 [PSCustomObject]@{ ID = 'Editor'; Aliases = @('e', 'ed', 'editor')}
 )
 
-$BuildSpecs = @(
+$BuildConfigs = @(
 [PSCustomObject]@{ ID = 'Debug';        Aliases = @('debug', 'de')},
 [PSCustomObject]@{ ID = 'Development';  Aliases = @('development', 'dev')},
 [PSCustomObject]@{ ID = 'Shipping';     Aliases = @('shipping', 'ship', 's')},
 [PSCustomObject]@{ ID = 'Test';         Aliases = @('test', 'tst', 't')}
+)
+
+$BuildPlatforms = @(
+[PSCustomObject]@{ ID = 'Win64';        Aliases = @('w', 'win', 'win64')},
+[PSCustomObject]@{ ID = 'PS5';          Aliases = @('ps5', 'playstation5')},
+[PSCustomObject]@{ ID = 'Linux';        Aliases = @('linux', 'lin', 'l')}
 )
 
 $ERR = "*error*"
@@ -305,27 +311,28 @@ function build
 {
     Param
     (
-        [string]$buildConfig    = "ed",
         [string]$buildSpec      = "dev"
+        [string]$buildSpec      = "ed",
+        [string]$buildConfig    = "dev"
     )
 
     $BuildConfigID = Get-ID-From-Alias $BuildConfigs $buildConfig
     if ($BuildConfigID -ieq $ERR)
     {
-        Write-Host " !!! build given a config it does not understand ('$buildConfig'). Doing Nothing! Please select 'client', 'editor', 'server' or some other supported build config."
+        Write-Host " !!! build given a config it does not understand ('$buildConfig'). Doing Nothing! Please select 'dev', 'test', 'ship' or some other supported build config."
         return
     }
-
+    
     $BuildSpecID = Get-ID-From-Alias $BuildSpecs $buildSpec
     if ($BuildSpecID -ieq $ERR)
     {
-        Write-Host " !!! build given a spec it does not understand ('$buildSpec'). Doing Nothing! Please select 'dev', 'test', 'ship' or some other supported build spec."
+        Write-Host " !!! build given a spec it does not understand ('$buildSpec'). Doing Nothing! Please select 'client', 'editor', 'server' or some other supported build spec."
         return
     }
     
     # Should match the name of the *.Target.cs to use to build.
     $BuildProjectName = ""
-    switch ($BuildConfigID)
+    switch ($BuildSpecID)
     {
         "Client" { $BuildProjectName = $UE_ProjectName }
         "Editor" { $BuildProjectName = "$($UE_ProjectName)Editor" }
@@ -333,10 +340,10 @@ function build
         default { Write-Host "**HOW DID YOU GET HERE?!"; return; }
     }
 
-    $BuildCommand = ". $UE_BuildScript $BuildProjectName Win64 $BuildSpecID $($CurrentWorkspace.ProjectPath) -waitmutex"
+    $BuildCommand = ". $UE_BuildScript $BuildProjectName Win64 $BuildConfigID $($CurrentWorkspace.ProjectPath) -waitmutex"
 
     Microsoft.PowerShell.Utility\Write-Host "    BUILD: " -NoNewLine -ForegroundColor "DarkCyan"
-    Microsoft.PowerShell.Utility\Write-Host "$BuildConfigID - $BuildSpecID" -ForegroundColor "Cyan"
+    Microsoft.PowerShell.Utility\Write-Host "$BuildSpecID - $BuildConfigID" -ForegroundColor "Cyan"
     Microsoft.PowerShell.Utility\Write-Host "  command: " -NoNewLine -ForegroundColor "DarkCyan"
     Microsoft.PowerShell.Utility\Write-Host "'$BuildCommand'" -ForegroundColor "Cyan"
 
@@ -349,35 +356,35 @@ function cook
 {
     Param
     (
-        [string]$buildConfig    = "cli",
-        [string]$buildSpec      = "dev",
+        [string]$buildSpec      = "cli",
+        [string]$buildConfig    = "dev",
         [bool]  $iterative      = 1
     )
 
     $BuildConfigID = Get-ID-From-Alias $BuildConfigs $buildConfig
     if ($BuildConfigID -ieq $ERR)
     {
-        Write-Host " !!! Cook given a config it does not understand ('$buildConfig'). Doing Nothing! Please select 'client', 'server' or some other supported build config."
+        Write-Host " !!! Cook given a config it does not understand ('$buildConfig'). Doing Nothing! Please select 'dev', 'test', 'ship' or some other supported build config."
         return
     }
-    if ($BuildConfigID -ieq "Editor")
-    {
-        Write-Host " !!! Cooking for the editor as a config is not really supported. Try 'client' or 'server' "
-        return
-    }
-
+    
     $BuildSpecID = Get-ID-From-Alias $BuildSpecs $buildSpec
     if ($BuildSpecID -ieq $ERR)
     {
-        Write-Host " !!! Cook given a spec it does not understand ('$buildSpec'). Doing Nothing! Please select 'dev', 'test', 'ship' or some other supported build spec."
+        Write-Host " !!! Cook given a spec it does not understand ('$buildSpec'). Doing Nothing! Please select 'client', 'server' or some other supported build spec."
+        return
+    }
+    if ($BuildSpecID -ieq "Editor")
+    {
+        Write-Host " !!! Cooking for the editor as a spec is not really supported. Try 'client' or 'server' "
         return
     }
 
     # Different configs require slightly different args, so tweak those here. 
-    switch ($BuildConfigID)
+    switch ($BuildSpecID)
     {   
-        "Client" { $ConfigSpecificArgs = "-platform=Win64 -clientconfig=$BuildSpecID" }
-        "Server" { $ConfigSpecificArgs = "-targetplatform=Win64 -target=`"$($UE_ProjectName)Server`" -serverconfig=`"$BuildSpecID`" -nocompileeditor" }
+        "Client" { $ConfigSpecificArgs = "-platform=Win64 -clientconfig=$BuildConfigID" }
+        "Server" { $ConfigSpecificArgs = "-targetplatform=Win64 -target=`"$($UE_ProjectName)Server`" -serverconfig=`"$BuildConfigID`" -nocompileeditor" }
         default { Write-Host "**HOW DID YOU GET HERE?!"; return; }
     }
 
@@ -389,7 +396,7 @@ function cook
     $CookCommand = ". $UE_UAT BuildCookRun -project=$($CurrentWorkspace.ProjectPath) -noP4 -unattended $ConfigSpecificArgs -cook"
 
     Microsoft.PowerShell.Utility\Write-Host "     COOK: " -NoNewLine -ForegroundColor "DarkCyan"
-    Microsoft.PowerShell.Utility\Write-Host "$BuildConfigID - $BuildSpecID" -ForegroundColor "Cyan"
+    Microsoft.PowerShell.Utility\Write-Host "$BuildSpecID - $BuildConfigID" -ForegroundColor "Cyan"
     Microsoft.PowerShell.Utility\Write-Host "  command: " -NoNewLine -ForegroundColor "DarkCyan"
     Microsoft.PowerShell.Utility\Write-Host "'$CookCommand'" -ForegroundColor "Cyan"
 
@@ -400,8 +407,8 @@ function run
 {
     Param
     (
-        [string]$buildConfig    = "cli",
-        [string]$buildSpec      = "dev",
+        [string]$buildSpec      = "cli",
+        [string]$buildConfig    = "dev",
         [bool]$useInsights      = 0,
         [bool]$replay           = 0,
         [bool]$clientConnect    = 1,
@@ -411,17 +418,17 @@ function run
     $BuildConfigID = Get-ID-From-Alias $BuildConfigs $buildConfig
     if ($BuildConfigID -ieq $ERR)
     {
-        Write-Host " !!! run given a config it does not understand ('$buildConfig'). Doing Nothing! Please select 'client', 'server' or some other supported build config."
+        Write-Host " !!! run given a config it does not understand ('$buildConfig'). Doing Nothing! Please select 'dev', 'test', 'ship' or some other supported build config."
         return
     }
     $BuildSpecID = Get-ID-From-Alias $BuildSpecs $buildSpec
     if ($BuildSpecID -ieq $ERR)
     {
-        Write-Host " !!! run given a spec it does not understand ('$buildSpec'). Doing Nothing! Please select 'dev', 'test', 'ship' or some other supported build spec."
+        Write-Host " !!! run given a spec it does not understand ('$buildSpec'). Doing Nothing! Please select 'client', 'server' or some other supported build spec."
         return
     }
 
-    switch ($BuildConfigID)
+    switch ($BuildSpecID)
     {   
         "Client" { 
             $ConfigRunCommand = "$($UE_ProjectName).exe" 
@@ -459,11 +466,65 @@ function run
     }
 
     Microsoft.PowerShell.Utility\Write-Host "      RUN: " -NoNewLine -ForegroundColor "DarkCyan"
-    Microsoft.PowerShell.Utility\Write-Host "$BuildConfigID - $BuildSpecID" -ForegroundColor "Cyan"
+    Microsoft.PowerShell.Utility\Write-Host "$BuildSpecID - $BuildConfigID" -ForegroundColor "Cyan"
     Microsoft.PowerShell.Utility\Write-Host "  command: " -NoNewLine -ForegroundColor "DarkCyan"
     Microsoft.PowerShell.Utility\Write-Host "'$RunCommand'" -ForegroundColor "Cyan"
 
     Invoke-Expression $RunCommand
+}
+
+function package
+{
+    Param
+    (
+        [string]$config         = "dev",
+        [string]$spec           = "cli",
+        [string]$platform       = "win64",
+        [string]$archivePath    = "",
+        [bool]  $iterativeCook  = 1
+    )
+
+    $ConfigID = Get-ID-From-Alias $BuildConfigs $config
+    if ($ConfigID -ieq $ERR)
+    {
+        Write-Host " !!! Package given a config it does not understand ('$config'). Doing Nothing! Please select 'dev', 'test', 'ship' or some other supported build config."
+        return
+    }
+    
+    $SpecID = Get-ID-From-Alias $BuildSpecs $spec
+    if ($SpecID -ieq $ERR)
+    {
+        Write-Host " !!! Package given a spec it does not understand ('$spec'). Doing Nothing! Please select 'client', 'server' or some other supported build spec."
+        return
+    }
+    if ($SpecID -ieq "Editor")
+    {
+        Write-Host " !!! Packing for the editor as a spec is not really supported. Try 'client' or 'server' "
+        return
+    }
+
+    $PlatformID = Get-ID-From-Alias $BuildPlatforms $platform
+    if ($SpecID -ieq $ERR)
+    {
+        Write-Host " !!! Package given a platform it does not understand ('$platform'). Doing Nothing! Please select 'win', 'ps5', 'linux' or some other supported platform."
+        return
+    }
+
+    [string]$ConfigSpecificArgs = ""
+    if ($iterative -eq 1)
+    {
+        $ConfigSpecificArgs = $ConfigSpecificArgs + " -iterativecooking"
+    }
+
+    ##WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -build -platform=\"XSX\" -clientconfig=\"Development\" -nocompileeditor -cook -cookflavor=multi -stage -pak -package -deploy -archive -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
+    $PackageCommand = ". $UE_UAT BuildCookRun -project='$($CurrentWorkspace.ProjectPath)' -noP4 -unattended -build -platform='$($PlatformID)' -clientconfig=$($ConfigID) -nocompileeditor -cook -cookflavor=multi $ConfigSpecificArgs -stage -pak -package -archive -archivedirectory='$($archivePath)'"
+
+    Microsoft.PowerShell.Utility\Write-Host "      package: " -NoNewLine -ForegroundColor "DarkCyan"
+    Microsoft.PowerShell.Utility\Write-Host "$PlatformID - $SpecID - $ConfigID -> $archivePath" -ForegroundColor "Cyan"
+    Microsoft.PowerShell.Utility\Write-Host "      command: " -NoNewLine -ForegroundColor "DarkCyan"
+    Microsoft.PowerShell.Utility\Write-Host "'$PackageCommand'" -ForegroundColor "Cyan"
+
+    Invoke-Expression $PackageCommand
 }
 
 function make_installed_build
@@ -902,6 +963,15 @@ function exp
     Invoke-Item "$UE_ProjectDirectory"
 }
 
+function net_adapter_reset
+{
+    # Disable Net adapters
+    [string]$ExeCommand = "Disable-NetAdapter -Name 'Ethernet 2'; sleep 3; Enable-NetAdapter -Name 'Ethernet 2'; sleep 2"
+
+    Write-Host " Disable Command: '$ExeCommand'"
+    Start-Process powershell -Verb runAs -ArgumentList $("" + $ExeCommand)
+}
+
 
 
 ## Kill Apps
@@ -942,6 +1012,15 @@ dev a
 
 ### Cook Content
 #WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -platform=\"Win64\" -clientconfig=\"Development\" -cook" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH")
+
+### Package Project w/ archive
+#WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -build -platform=\"Win64\" -clientconfig=\"Development\" -cook -cookflavor=multi -stage -archive -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
+
+### Package for console
+#WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -build -platform=\"XSX\" -clientconfig=\"Development\" -nocompileeditor -cook -cookflavor=multi -stage -pak -package -deploy -archive -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
+
+### Package for win server
+#WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -build -platform=\"Win64\" -targetplatform=Win64 -target=AnacrusisServer -serverconfig=Development -nocompileeditor -cook -cookflavor=multi -stage -pak -archive -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
 
 ### Iterative Cook
 ## D:\UE4\SBUE\Win\Engine\Build\BatchFiles/RunUAT BuildCookRun -project="D:\w\87c67ea3ba86a5c5\supreme_blitheness\Anacrusis.uproject" -noP4 -unattended -platform="Win64" -build -clientconfig="Development" -cook -cookflavor=multi -iterativecooking   -withEditor
