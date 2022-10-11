@@ -311,7 +311,6 @@ function build
 {
     Param
     (
-        [string]$buildSpec      = "dev"
         [string]$buildSpec      = "ed",
         [string]$buildConfig    = "dev"
     )
