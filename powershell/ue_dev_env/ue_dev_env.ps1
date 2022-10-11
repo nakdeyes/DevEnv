@@ -476,8 +476,8 @@ function package
 {
     Param
     (
-        [string]$config         = "dev",
         [string]$spec           = "cli",
+        [string]$config         = "dev",
         [string]$platform       = "win64",
         [string]$archivePath    = "",
         [bool]  $iterativeCook  = 1
