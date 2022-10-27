@@ -518,7 +518,7 @@ function package
     }
 
     ##WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -build -platform=\"XSX\" -clientconfig=\"Development\" -nocompileeditor -cook -cookflavor=multi -stage -pak -package -deploy -archive -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
-    $PackageCommand = ". $UE_UAT BuildCookRun -project='$($CurrentWorkspace.ProjectPath)' -noP4 -unattended -build -platform='$($PlatformID)' -clientconfig=$($ConfigID) -nocompileeditor -cook -cookflavor=multi $ConfigSpecificArgs -stage -pak -package -archive -archivedirectory='$($archivePath)'"
+    $PackageCommand = ". $UE_UAT BuildCookRun -project='$($CurrentWorkspace.ProjectPath)' -noP4 -unattended -build -platform='$($PlatformID)' -clientconfig=$($ConfigID) -nocompileeditor -cook -cookflavor=multi $ConfigSpecificArgs -stage -package -archive -archivedirectory='$($archivePath)'"
 
     Microsoft.PowerShell.Utility\Write-Host "      package: " -NoNewLine -ForegroundColor "DarkCyan"
     Microsoft.PowerShell.Utility\Write-Host "$PlatformID - $SpecID - $ConfigID -> $archivePath" -ForegroundColor "Cyan"
@@ -1004,6 +1004,9 @@ dev a
 
 ####################################################
 ##### OMG You are so lame.. Scratch notes section! 
+
+# params to add to VS to profile
+# -trace="cpu,frame,bookmark" -statnamedevents -tracehost=127.0.0.1
 
 ### Print all the members of some object, like a file Item
 #(Get-Item $CurrentWorkspace.ProjectPath) | Get-Member
