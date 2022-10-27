@@ -408,6 +408,7 @@ function run
     (
         [string]$buildSpec      = "cli",
         [string]$buildConfig    = "dev",
+        [string]$map            = "",
         [bool]$useInsights      = 0,
         [bool]$replay           = 0,
         [bool]$clientConnect    = 1,
@@ -430,7 +431,8 @@ function run
     switch ($BuildSpecID)
     {   
         "Client" { 
-            $ConfigRunCommand = "$($UE_ProjectName).exe" 
+            $ConfigRunCommand = "$($UE_ProjectName).exe $($map)"
+            
             if ($clientConnect -eq 1)
             {
                 $ConfigRunCommand = $ConfigRunCommand + " 127.0.0.1 ? service_uri=premium.firewalkcloud.com"
