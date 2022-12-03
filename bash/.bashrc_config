@@ -1,0 +1,85 @@
+#############################################################################################################
+########### Workspaces - Contextually switch to these workspaces and execute commands!
+# Workspace A/0
+wkspce_note[0]='default dev'
+wkspce_drive[0]='d'
+wkspce_path[0]='dev/p4/tim_home_sb/supreme_blitheness'
+wkspce_p4cli[0]='tim_home_sb'
+wkspce_p4host[0]='tim_desktop'
+wkspce_p4user[0]='sb_tim'
+wkspce_p4port[0]='ssl:sb.perforce.assembla.com:1667'
+wkspce_defaultMap[0]='Lobby'
+wkspce_uePath[0]='/cygdrive/d/dev/p4/tim_home_sbue/SBUE/Win'
+
+# Workspace B/1
+wkspce_note[1]='Console Source Dev'
+wkspce_drive[1]='d'
+wkspce_path[1]='dev/p4/tim_home_sb2/supreme_blitheness'
+wkspce_p4cli[1]='tim_home_sb2'
+wkspce_p4host[1]='tim_desktop'
+wkspce_p4user[1]='sb_tim'
+wkspce_p4port[1]='ssl:sb.perforce.assembla.com:1667'
+wkspce_defaultMap[1]='Lobby'
+wkspce_uePath[1]='/cygdrive/d/dev/p4/tim_home_sbue/SBUE/Win'
+#wkspce_uePath[1]='/cygdrive/d/dev/p4/tim_home_sbue2/SBUE/Win'
+
+# Workspace C/2
+wkspce_note[2]='WWISE workspace dev'
+wkspce_drive[2]='d'
+wkspce_path[2]='dev/p4/tim_home_sb3/supreme_blitheness'
+wkspce_p4cli[2]='tim_home_sb3'
+wkspce_p4user[2]='sb_tim'
+wkspce_p4host[2]='sb/one'
+wkspce_p4port[2]='ssl:sb.perforce.assembla.com:1667'
+wkspce_defaultMap[2]='Lobby'
+wkspce_uePath[2]='/cygdrive/d/dev/p4/tim_home_sbue/SBUE/Win'
+
+# Workspace D/3
+wkspce_note[3]='Subliminal'
+wkspce_drive[3]='d'
+wkspce_path[3]='dev/p4/subliminal/Subliminal'
+wkspce_p4cli[3]='nakedeyes_subliminal_main'
+wkspce_p4host[3]='tim_desktop'
+wkspce_p4user[3]='nakedeyes'
+wkspce_p4port[3]='ssl:192.168.1.202:1666'
+wkspce_defaultMap[3]='Lobby'
+wkspce_uePath[3]='/cygdrive/d/dev/ue/UE_4.26'
+
+# Workspace E/4
+wkspce_note[4]='SBUE Source Only'
+wkspce_drive[4]='d'
+wkspce_path[4]='dev/p4/tim_home_ue_src2'
+wkspce_p4cli[4]='tim_home_ue_src'
+wkspce_p4host[4]='tim_desktop'
+wkspce_p4user[4]='sb_tim'
+wkspce_p4port[4]='ssl:sb.perforce.assembla.com:1667'
+wkspce_defaultMap[4]='Lobby'
+wkspce_uePath[4]='/cygdrive/d/dev/p4/tim_home_ue_src2'
+
+#############################################################################################################
+########### Build Output Destination directory
+BUILD_OUTPUT_DIR="/cygdrive/d/dev/builds"
+
+#############################################################################################################
+########### Misc Local Paths - 
+### Visual Studio 2015, 2017, or 2019
+#2015
+#VS_PATH="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 14.0/Common7/IDE/devenv.exe"
+#2017 Community
+#VS_PATH="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/2017/Community/Common7/IDE/devenv.exe"
+#2017 Pro
+#VS_PATH="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/2017/Professional/Common7/IDE/devenv.exe"
+#2019 Pro
+#VS_PATH="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/2019/Professional/Common7/IDE/devenv.exe"
+#2019 Enterprise
+VS_PATH="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/Common7/IDE/devenv.exe"
+
+### Clang Path (only used for manual clang format on full Source directory)
+CLANG_PATH="/cygdrive/c/Users/timot/AppData/Local/Microsoft/VisualStudio/15.0_65ca040f/Extensions/4mms2pnl.ndz/clang-format.exe"
+
+### Path to local UE UserEngine config
+UE_USER_CONFIG_PATH="/cygdrive/c/Users/timot/AppData/Local/Unreal Engine/Engine/Config/UserEngine.ini"
+
+#############################################################################################################
+########### Fast Drive Symlink Destination directory
+FAST_SYMLINK_DIR="/cygdrive/f/dev/test_fast_dest_folder"

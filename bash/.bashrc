@@ -21,217 +21,58 @@ BASH_SCRIPT_DIR="/cygdrive/c/cygwin64/home/timot/"
 # The latest version as installed by the Cygwin Setup program can
 # always be found at /etc/defaults/etc/skel/.bashrc
 
-# Modifying /etc/skel/.bashrc directly will prevent
-# setup from updating it.
-
-# The copy in your home directory (~/.bashrc) is yours, please
-# feel free to customise it to create a shell
-# environment to your liking.  If you feel a change
-# would be benifitial to all, please feel free to send
-# a patch to the cygwin mailing list.
-
-# User dependent .bashrc file
-
-# If not running interactively, don't do anything
-#[[ "$-" != *i* ]] && return
-
-# Shell Options
-#
-# See man bash for more options...
-#
-# Don't wait for job termination notification
-# set -o notify
-#
-# Don't use ^D to exit
-# set -o ignoreeof
-#
-# Use case-insensitive filename globbing
-# shopt -s nocaseglob
-#
-# Make bash append rather than overwrite the history on disk
-# shopt -s histappend
-#
-# When changing directory small typos can be ignored by bash
-# for example, cd /vr/lgo/apaache would find /var/log/apache
-# shopt -s cdspell
-
-# Completion options
-#
-# These completion tuning parameters change the default behavior of bash_completion:
-#
-# Define to access remotely checked-out files over passwordless ssh for CVS
-# COMP_CVS_REMOTE=1
-#
-# Define to avoid stripping description in --option=description of './configure --help'
-# COMP_CONFIGURE_HINTS=1
-#
-# Define to avoid flattening internal contents of tar files
-# COMP_TAR_INTERNAL_PATHS=1
-#
-# Uncomment to turn on programmable completion enhancements.
-# Any completions you add in ~/.bash_completion are sourced last.
-# [[ -f /etc/bash_completion ]] && . /etc/bash_completion
-
-# History Options
-#
-# Don't put duplicate lines in the history.
-# export HISTCONTROL=$HISTCONTROL${HISTCONTROL+,}ignoredups
-#
-# Ignore some controlling instructions
-# HISTIGNORE is a colon-delimited list of patterns which should be excluded.
-# The '&' is a special pattern which suppresses duplicate entries.
-# export HISTIGNORE=$'[ \t]*:&:[fb]g:exit'
-# export HISTIGNORE=$'[ \t]*:&:[fb]g:exit:ls' # Ignore the ls command as well
-#
-# Whenever displaying the prompt, write the previous line to disk
-# export PROMPT_COMMAND="history -a"
-
-# Aliases
-#
-# Some people use a different file for aliases
-# if [ -f "${HOME}/.bash_aliases" ]; then
-#   source "${HOME}/.bash_aliases"
-# fi
-#
-# Some example alias instructions
-# If these are enabled they will be used instead of any instructions
-# they may mask.  For example, alias rm='rm -i' will mask the rm
-# application.  To override the alias instruction use a \ before, ie
-# \rm will call the real rm not the alias.
-#
-# Interactive operation...
-# alias rm='rm -i'
-# alias cp='cp -i'
-# alias mv='mv -i'
-#
-# Default to human readable figures
-# alias df='df -h'
-# alias du='du -h'
-#
-# Misc :)
-# alias less='less -r'                          # raw control characters
-# alias whence='type -a'                        # where, of a sort
-# alias grep='grep --color'                     # show differences in colour
-# alias egrep='egrep --color=auto'              # show differences in colour
-# alias fgrep='fgrep --color=auto'              # show differences in colour
-#
-# Some shortcuts for different directory listings
-# alias ls='ls -hF --color=tty'                 # classify files in colour
-# alias dir='ls --color=auto --format=vertical'
-# alias vdir='ls --color=auto --format=long'
-# alias ll='ls -l'                              # long list
-# alias la='ls -A'                              # all but . and ..
-# alias l='ls -CF'                              #
-
-# Umask
-#
-# /etc/profile sets 022, removing write perms to group + others.
-# Set a more restrictive umask: i.e. no exec perms for others:
-# umask 027
-# Paranoid: neither group nor others have any perms:
-# umask 077
-
-# Functions
-#
-# Some people use a different file for functions
-# if [ -f "${HOME}/.bash_functions" ]; then
-#   source "${HOME}/.bash_functions"
-# fi
-#
-# Some example functions:
-#
-# a) function settitle
-# settitle () 
-# { 
-#   echo -ne "\e]2;$@\a\e]1;$@\a"; 
-# }
-# 
-# b) function cd_func
-# This function defines a 'cd' replacement function capable of keeping, 
-# displaying and accessing history of visited directories, up to 10 entries.
-# To use it, uncomment it, source this file and try 'cd --'.
-# acd_func 1.0.5, 10-nov-2004
-# Petar Marinov, http:/geocities.com/h2428, this is public domain
-# cd_func ()
-# {
-#   local x2 the_new_dir adir index
-#   local -i cnt
-# 
-#   if [[ $1 ==  "--" ]]; then
-#     dirs -v
-#     return 0
-#   fi
-# 
-#   the_new_dir=$1
-#   [[ -z $1 ]] && the_new_dir=$HOME
-# 
-#   if [[ ${the_new_dir:0:1} == '-' ]]; then
-#     #
-#     # Extract dir N from dirs
-#     index=${the_new_dir:1}
-#     [[ -z $index ]] && index=1
-#     adir=$(dirs +$index)
-#     [[ -z $adir ]] && return 1
-#     the_new_dir=$adir
-#   fi
-# 
-#   #
-#   # '~' has to be substituted by ${HOME}
-#   [[ ${the_new_dir:0:1} == '~' ]] && the_new_dir="${HOME}${the_new_dir:1}"
-# 
-#   #
-#   # Now change to the new dir and add to the top of the stack
-#   pushd "${the_new_dir}" > /dev/null
-#   [[ $? -ne 0 ]] && return 1
-#   the_new_dir=$(pwd)
-# 
-#   #
-#   # Trim down everything beyond 11th entry
-#   popd -n +11 2>/dev/null 1>/dev/null
-# 
-#   #
-#   # Remove any other occurence of this dir, skipping the top of the stack
-#   for ((cnt=1; cnt <= 10; cnt++)); do
-#     x2=$(dirs +${cnt} 2>/dev/null)
-#     [[ $? -ne 0 ]] && return 0
-#     [[ ${x2:0:1} == '~' ]] && x2="${HOME}${x2:1}"
-#     if [[ "${x2}" == "${the_new_dir}" ]]; then
-#       popd -n +$cnt 2>/dev/null 1>/dev/null
-#       cnt=cnt-1
-#     fi
-#   done
-# 
-#   return 0
-# }
-# 
-# alias cd=cd_func
-
+# load config file params
 source "${BASH_SCRIPT_DIR}/.bashrc_config"
-
-alias visstu="cygstart \"$VS_PATH\""
-alias unrealeditor="cygstart \"$UE_PATH/Engine/Binaries/Win64/UE4Editor.exe\""
-alias unrealeditorcmd="cygstart \"$UE_PATH/Engine/Binaries/Win64/UE4Editor-Cmd.exe\""
-alias vs='visstu $UESOLUTIONPATH'
-alias ue='cygstart $UEPROJPATH'
-alias ufe="cygstart \"$UE_PATH/Engine/Binaries/Win64/UnrealFrontend.exe\""
 
 #init vars
 DEVPATH="/cygdrive/${wkspce_drive[0]}/${wkspce_path[0]}"
 WINDEVPATH="${wkspce_drive[0]}:/${wkspce_path[0]}"
 CUR_WORKSPACE_LETTER="a"
+UE_PATH=""
 UEPROJPATH=""
 UEPROJABSPATH=""
 UEPROJNAME=""
 UESOLUTIONPATH=""
 UEVSPROJTARGET=""
-UEBUILDSCRIPTSPATH="${UE_PATH}/Engine/Build/BatchFiles"
-UEEDITORPATH="${UE_PATH}/Engine/Binaries/Win64/UE4Editor.exe"
-UEBUILDTOOLPATH="${UE_PATH}/Engine/Binaries/DotNET/UnrealBuildTool.exe"
 UEP4CLIENT=""
 UEP4HOST=""
+UEP4USER=""
+UEP4PORT=""
 UEDEFAULTMAP=""
 
 set CYGWIN="winsymlinks:nativestrict"
+shopt -s expand_aliases
+# Populates aliases that require UE_PATH, after it has been set per-workspace
+function refresh_aliases() {
+    UEBUILDSCRIPTSPATH="${UE_PATH}/Engine/Build/BatchFiles"
+    UEEDITORPATH="${UE_PATH}/Engine/Binaries/Win64/UE4Editor.exe"
+    UEEDITORCMDPATH="${UE_PATH}/Engine/Binaries/Win64/UE4Editor-Cmd.exe"
+    UEBUILDTOOLPATH="${UE_PATH}/Engine/Binaries/DotNET/UnrealBuildTool.exe"
+
+    shopt -s expand_aliases
+}
+
+function unrealeditor() {
+    cygstart ${UE_PATH}/Engine/Binaries/Win64/UE4Editor.exe $@
+}
+function unrealeditorcmd() {
+    cygstart ${UE_PATH}/Engine/Binaries/Win64/UE4Editor-Cmd.exe $@
+}
+function ufe() {
+    cygstart ${UE_PATH}/Engine/Binaries/Win64/UnrealFrontend.exe
+}
+function visstu() {
+    cygstart "${VS_PATH}" $@
+}
+function vs() {
+    visstu "${UESOLUTIONPATH}"
+}
+function ue() {
+    cygstart ${UEPROJPATH}
+}
+function ueInsights() {
+    cygstart ${UE_PATH}/Engine/Binaries/Win64/UnrealInsights.exe
+}
 
 # dev - switch to a workspace, and build spec
 function dev() {
@@ -260,14 +101,22 @@ function dev() {
     WINDEVPATH="${wkspce_drive[$wrkspce_ind]}:/${wkspce_path[$wrkspce_ind]}"
     UEP4CLIENT="${wkspce_p4cli[$wrkspce_ind]}"
     UEP4HOST="${wkspce_p4host[$wrkspce_ind]}"
+    UEP4USER="${wkspce_p4user[$wrkspce_ind]}"
+    UEP4PORT="${wkspce_p4port[$wrkspce_ind]}"
     UEDEFAULTMAP="${wkspce_defaultMap[$wrkspce_ind]}"
+    UE_PATH="${wkspce_uePath[$wrkspce_ind]}"
 
     findAndSetUESolutionAndProjectName
+    
+    refresh_aliases
     
     #magic to convert forward slash to back slash for windows
     WINDEVPATH=$(sed 's/\//\\/g' <<< "$WINDEVPATH")
     
-    echo "   dev: $DEVPATH"
+    echo "   dev-note: ${wkspce_note[$wrkspce_ind]}"
+    echo "   dev-path: $DEVPATH"
+    echo "     dev-ue: $UE_PATH"
+    echo "         p4: user'$UEP4USER' client'$UEP4CLIENT' host'$UEP4HOST' port'$UEP4PORT'"
     
     cd $DEVPATH
 }
@@ -334,7 +183,7 @@ function dev_info_help() {
     # spew the info for this workspace!
     local wrkspce_letter
     wrkspce_letter=$(tr 0123456789 ABCDEFGHIJ <<< "$inputNum")
-    echo "  Workspace $wrkspce_letter:"
+    echo "  Workspace $wrkspce_letter: ${wkspce_note[$inputNum]}"
     echo "         path: ${wkspce_drive[$inputNum]}:/${wkspce_path[$inputNum]}"
     #echo "         spec: ${wkspce_target[$inputNum]},${wkspce_spec[$inputNum]}"
     echo ""
@@ -346,7 +195,7 @@ function display_dev_help() {
     LPR='\033[1;35m'
     NC='\033[0m' # No Color
     echo -e ""
-    echo -e "${CYN}Tim's Game Dev Bash Script v0.1 .. Help"
+    echo -e "${CYN}Tim's Game Dev Bash Script v0.2 .. Help"
     echo -e "      Useful commands for Game Development with Unreal Engine and Visual Studio."
     echo -e ""
     echo -e "${PUR}  COMMAND                 INFO"
@@ -511,7 +360,7 @@ function client_con() {
             CUR_WIN_Y=`expr ${CUR_WIN_Y} + ${CUR_WIN_Y} + ${CUR_WIN_Y} + ${WINDOW_Y_SIZE}`
         fi
 
-        unrealeditor ${WIN_UE_PROJ_PATH} 127.0.0.1 -game -WINDOWED -ResX=${WINDOW_X_SIZE} -ResY=${WINDOW_Y_SIZE} -WinX=${CUR_WIN_X} -WinY=${CUR_WIN_Y} -ConsoleX=${CUR_WIN_X} -ConsoleY=${CUR_WIN_Y} -log -nosteam
+        cygstart ${DEVPATH}/Binaries/Win64/${UEPROJNAME}.exe 127.0.0.1 -game -WINDOWED -ResX=${WINDOW_X_SIZE} -ResY=${WINDOW_Y_SIZE} -WinX=${CUR_WIN_X} -WinY=${CUR_WIN_Y} -ConsoleX=${CUR_WIN_X} -ConsoleY=${CUR_WIN_Y} -log -nosteam
     done
 
 }
@@ -551,9 +400,21 @@ function clients() {
             CUR_WIN_Y=`expr ${CUR_WIN_Y} + ${CUR_WIN_Y} + ${CUR_WIN_Y} + ${WINDOW_Y_SIZE}`
         fi
 
-        unrealeditor ${WIN_UE_PROJ_PATH} -game -WINDOWED -ResX=${WINDOW_X_SIZE} -ResY=${WINDOW_Y_SIZE} -WinX=${CUR_WIN_X} -WinY=${CUR_WIN_Y} -ConsoleX=${CUR_WIN_X} -ConsoleY=${CUR_WIN_Y} -log -nosteam
+        ${DEVPATH}/Binaries/Win64/${UEPROJNAME}.exe -game -WINDOWED -ResX=${WINDOW_X_SIZE} -ResY=${WINDOW_Y_SIZE} -WinX=${CUR_WIN_X} -WinY=${CUR_WIN_Y} -ConsoleX=${CUR_WIN_X} -ConsoleY=${CUR_WIN_Y} -log -nosteam
     done
 
+}
+
+function listen_serv_ue() {
+    # check for optional map
+    MAP_TO_PLAY=${UEDEFAULTMAP}
+    if [ $# -ne 0 ]; then
+        MAP_TO_PLAY=$1
+    fi
+
+    cd $DEVPATH
+    WIN_UE_PROJ_PATH=$(cygpath -w ${UEPROJABSPATH})
+    unrealeditor "${WIN_UE_PROJ_PATH}" "${MAP_TO_PLAY}"?listen -game -WINDOWED -ResX=1138 -ResY=640 -WinX=1138 -WinY=660 -ConsoleX=1138 -ConsoleY=660 -log
 }
 
 function listen_serv() {
@@ -565,7 +426,22 @@ function listen_serv() {
 
     cd $DEVPATH
     WIN_UE_PROJ_PATH=$(cygpath -w ${UEPROJABSPATH})
-    unrealeditor ${WIN_UE_PROJ_PATH} ${MAP_TO_PLAY}?listen -game -WINDOWED -ResX=1138 -ResY=640 -WinX=1138 -WinY=660 -ConsoleX=1138 -ConsoleY=660 -log -nosteam
+    ### unrealeditor "${WIN_UE_PROJ_PATH}" "${MAP_TO_PLAY}"?listen -game -WINDOWED -ResX=1138 -ResY=640 -WinX=1138 -WinY=660 -ConsoleX=1138 -ConsoleY=660 -log -nosteam
+    cygstart ${DEVPATH}/Binaries/Win64/${UEPROJNAME}.exe -WINDOWED -ResX=1138 -ResY=640 -WinX=1138 -WinY=660 -ConsoleX=1138 -ConsoleY=660 -log
+
+    #cygstart ${DEVPATH}/Binaries/Win64/${UEPROJNAME}.exe -WINDOWED -ResX=1138 -ResY=640 -WinX=1138 -WinY=660 -ConsoleX=1138 -ConsoleY=660 -log -trace=cpu,frame,bookmark,memory,loadtime -statnamedevents -loadtimetrace -tracehost=192.168.1.201
+}
+
+function ded_serv_ue() {
+    # check for optional map
+    MAP_TO_PLAY=${UEDEFAULTMAP}
+    if [ $# -ne 0 ]; then
+        MAP_TO_PLAY=$1
+    fi
+
+    cd $DEVPATH
+    WIN_UE_PROJ_PATH=$(cygpath -w ${UEPROJABSPATH})
+    unrealeditor \""${WIN_UE_PROJ_PATH}"\" "${MAP_TO_PLAY}" -server -log -nosteam
 }
 
 function ded_serv() {
@@ -577,12 +453,84 @@ function ded_serv() {
 
     cd $DEVPATH
     WIN_UE_PROJ_PATH=$(cygpath -w ${UEPROJABSPATH})
-    unrealeditor ${WIN_UE_PROJ_PATH} ${MAP_TO_PLAY} -server -log -nosteam
+    cygstart ${DEVPATH}/Binaries/Win64/${UEPROJNAME}Server.exe s1c1l1_terminal?Scenario=Episode1 -log -nosteam
+    #cygstart ${DEVPATH}/Binaries/Win64/${UEPROJNAME}Server.exe "${MAP_TO_PLAY}" -nosteam
+    ## unrealeditor \""${WIN_UE_PROJ_PATH}"\" "${MAP_TO_PLAY}" -server -log -nosteam
+}
+
+function ded_serv_ab() {
+    # check for optional map
+    MAP_TO_PLAY=${UEDEFAULTMAP}
+    if [ $# -ne 0 ]; then
+        MAP_TO_PLAY=$1
+    fi
+
+    cd $DEVPATH
+    WIN_UE_PROJ_PATH=$(cygpath -w ${UEPROJABSPATH})
+    #cygstart ${DEVPATH}/Binaries/Win64/${UEPROJNAME}Server.exe s1c1l1_terminal?Scenario=Episode1 -log -ExecCmds=\"ab.server.local true, sb.debug.recordVisLogs true, ab.server.name TimServer\" -nosteam
+    #cygstart ${DEVPATH}/Binaries/Win64/${UEPROJNAME}Server.exe s1c1l1_terminal?Scenario=Episode1 -log -ExecCmds=\"ab.server.local true, ab.server.name TimServer\" -nosteam -NetTrace=4 -trace=net -tracehost=127.0.0.1
+    cygstart ${DEVPATH}/Binaries/Win64/${UEPROJNAME}Server.exe s1c1l1_terminal?Scenario=Episode1 -log -ExecCmds=\"ab.server.local true, ab.server.name TimServer\" -nothreading -trace=cpu,frame,bookmark,memory -statnamedevents -tracehost=127.0.0.1
+    #cygstart ${DEVPATH}/Binaries/Win64/${UEPROJNAME}Server.exe s1c1l1_terminal?Scenario=Episode1 -log -ExecCmds=\"ab.server.local true, ab.server.name TimServer\" -nosteam
+    #cygstart ${DEVPATH}/Binaries/Win64/${UEPROJNAME}Server.exe s1c1l1_terminal?Scenario=Episode1 -log -ExecCmds=\"ab.server.local true, ab.server.name TimsServer, ab.server.ip 192.168.1.38, ab.server.port 7777\”
+    #cygstart ${DEVPATH}/Binaries/Win64/${UEPROJNAME}Server.exe s1c1l1_terminal?Scenario=Episode1 -log -ExecCmds=\"ab.server.local true, ab.server.name TimsServer, ab.server.ip 192.168.1.38, ab.server.port 7777, ab.server.iptype public\”
+    #cygstart ${DEVPATH}/Binaries/Win64/${UEPROJNAME}Server.exe "${MAP_TO_PLAY}" -nosteam
+    ## unrealeditor \""${WIN_UE_PROJ_PATH}"\" "${MAP_TO_PLAY}" -server -log -nosteam
+}
+
+function ab_client() {
+    # check for optional map
+    MAP_TO_PLAY=${UEDEFAULTMAP}
+    if [ $# -ne 0 ]; then
+        MAP_TO_PLAY=$1
+    fi
+
+    cd $DEVPATH
+    WIN_UE_PROJ_PATH=$(cygpath -w ${UEPROJABSPATH})
+    ### unrealeditor "${WIN_UE_PROJ_PATH}" "${MAP_TO_PLAY}"?listen -game -WINDOWED -ResX=1138 -ResY=640 -WinX=1138 -WinY=660 -ConsoleX=1138 -ConsoleY=660 -log -nosteam
+    #cygstart ${DEVPATH}/Binaries/Win64/${UEPROJNAME}.exe -WINDOWED -ResX=1920 -ResY=1080 -WinX=1138 -WinY=660 -ConsoleX=1138 -ConsoleY=660 -log -ExecCmds=\"sb.partymanager.servername TimServer\"
+    #cygstart ${DEVPATH}/Binaries/Win64/${UEPROJNAME}.exe -WINDOWED -ResX=1920 -ResY=1080 -WinX=1138 -WinY=660 -ConsoleX=1138 -ConsoleY=660 -log -ExecCmds=\"sb.partymanager.servername TimServer\" -trace=cpu,frame,bookmark,memory,loadtime -statnamedevents -loadtimetrace -tracehost=127.0.0.1
+    cygstart ${DEVPATH}/Binaries/Win64/${UEPROJNAME}.exe -WINDOWED -ResX=1920 -ResY=1080 -WinX=1138 -WinY=660 -ConsoleX=1138 -ConsoleY=660 -log -ExecCmds=\"sb.partymanager.servername TimServer\" -NetTrace=4 -trace=net -tracehost=127.0.0.1 -showPerf
+}
+
+function ab_serv_cli() {
+    # super lame way to do 1 dedicated ab local server and 1 client
+    ABSwitch -server
+    sleep 1
+    ded_serv_ab
+    sleep 10
+    ABSwitch -steam -dynamic
+    sleep 1
+    ab_client
+}
+
+function ded_serv_ab_dir() {
+    BuildDirName="defaultWinServer"
+    if [ $# -ne 0 ]; then
+        BuildDirName="$1"
+    fi
+
+    BuildDirName="$BUILD_OUTPUT_DIR"/"$BuildDirName"/WindowsServer
+
+    cd $DEVPATH
+    WIN_UE_PROJ_PATH=$(cygpath -w ${UEPROJABSPATH})
+    cygstart ${BuildDirName}/${UEPROJNAME}Server.exe s1c1l1_terminal?Scenario=Episode1 -log -ExecCmds=\"ab.server.local true, sb.debug.recordVisLogs true, ab.server.iptype public, ab.server.name TimsServer\" -nosteam
 }
 
 function serv_cli() {
     ded_serv $2
     client_con $1
+}
+
+function levelContextCommandlet() {
+    # check for optional map
+    MAP_TO_PLAY=${UEDEFAULTMAP}
+    if [ $# -ne 0 ]; then
+        MAP_TO_PLAY=$1
+    fi
+
+    cd $DEVPATH
+    WIN_UE_PROJ_PATH=$(cygpath -w ${UEPROJABSPATH})
+    unrealeditor "${WIN_UE_PROJ_PATH}" LevelContextBuildCommandlet -usesourcecontrol
 }
 
 #### Dev aliases
@@ -599,83 +547,31 @@ alias p4v='p4sethost; cygstart p4v'
 
 # Kill Application Shortcuts!
 alias kvs='ps -W | awk "/devenv.exe/,NF=1" | xargs kill -f'
+alias kcode='ps -W | awk "/Code.exe/,NF=1" | xargs kill -f'
 alias kue='ps -W | awk "/UE4Editor.exe/,NF=1" | xargs kill -f'
 
 # perforce stuff
-alias p4sethost='p4 set P4HOST=${UEP4HOST}'
-alias p4Clean='p4sethost; p4 -c ${UEP4CLIENT} clean -e -a -d -I -n ${WINDEVPATH}\\...'
+alias p4Clean='p4sethost; p4 -c ${UEP4CLIENT} clean -e -a -d -I -l ${WINDEVPATH}\\...'
 alias p4Opened='p4sethost; p4 -c ${UEP4CLIENT} opened'
-alias p4Login='p4sethost; p4 -c ${UEP4CLIENT} login'
 
-function p4Sync_parseSyncOutputLine() {
-    
-    # search for most common case: file updated
-    searchstring="- updating "
-    file_name=${1#*$searchstring}
-    index=$((${#1} - ${#file_name} - ${#searchstring}-1))
-
-    # search for file addition if required
-    if (( index < 0 )); then
-        searchstring="- added as "
-        file_name=${1#*$searchstring}
-        index=$((${#1} - ${#file_name} - ${#searchstring}-1))
-    fi
-
-    # search for file deletion if required
-    if (( index < 0 )); then
-        searchstring="- deleted as "
-        file_name=${1#*$searchstring}
-        index=$((${#1} - ${#file_name} - ${#searchstring}-1))
-    fi
-
-    file_name=${1:0:${index}}
-
-    SYNC_EDITOR_LINE_COUNT=$(($SYNC_EDITOR_LINE_COUNT+1))
-    SYNC_PREFIX_ARR[2]=${SYNC_PREFIX_ARR[1]}
-    SYNC_PREFIX_ARR[1]=${SYNC_PREFIX_ARR[0]}
-    SYNC_PREFIX_ARR[0]=$(printf "syncing %03d/%03d)" ${SYNC_EDITOR_LINE_COUNT} ${P4SYNC_OUTPUT_COUNT})
-
-    SYNC_OUTPUT_ARR[2]=${SYNC_OUTPUT_ARR[1]}
-    SYNC_OUTPUT_ARR[1]=${SYNC_OUTPUT_ARR[0]}
-    SYNC_OUTPUT_ARR[0]=$(echo ${file_name} | cut -c-$((${COLUMNS}-16)))
-
-    echo -en "\e[3A \r\e[0J" # up - moves 3 lines up and clear to end
-    printf "${CYN}%s${NC} %s\n${CYN}%s${NC} %s\n${CYN}%s${NC} %s\n" ${SYNC_PREFIX_ARR[2]} ${SYNC_OUTPUT_ARR[2]} ${SYNC_PREFIX_ARR[1]} ${SYNC_OUTPUT_ARR[1]} ${SYNC_PREFIX_ARR[0]} ${SYNC_OUTPUT_ARR[0]}
+function p4sethost()
+{
+    p4 set P4HOST=${UEP4HOST}
+    p4 set P4CLIENT=${UEP4CLIENT}
+    p4 set P4USER=${UEP4USER}
+    p4 set P4PORT=${UEP4PORT}
 }
 
-function p4Sync() {
+function p4Login()
+{
     p4sethost
-
-    # sync client
-    P4SYNC_OUTPUT=$(p4 -c ${UEP4CLIENT} sync -n)
-    P4SYNC_OUTPUT_COUNT=$(echo "${P4SYNC_OUTPUT}" | wc -l)
-
-    CYN='\033[0;36m'
-    LPR='\033[1;35m'
-    NC='\033[0m' # No Color
-    
-    if [ "$P4SYNC_OUTPUT" == "" ] ; then
-        printf "\r\e[0K${CYN}syncing 000/000)       ${LPR}No Files to sync!${NC}\n"
-    else
-        SYNC_PREFIX_ARR=("syncing 000/000)" "syncing 000/000)" "syncing 000/000)")
-        SYNC_OUTPUT_ARR=(" " " " " ")
-        printf "${CYN}%s %s\n%s %s\n%s %s${NC}\n" ${SYNC_PREFIX_ARR[2]} ${SYNC_OUTPUT_ARR[2]} ${SYNC_PREFIX_ARR[1]} ${SYNC_OUTPUT_ARR[1]} ${SYNC_PREFIX_ARR[0]} ${SYNC_OUTPUT_ARR[0]}
-        SYNC_EDITOR_LINE_COUNT=0
-
-        COLUMNS=$(tput cols)
-        COLUMNS=$((COLUMNS-2)) # specific col width to cut to for spew in loop below
-        OLD_IFS=${IFS}
-        IFS='
-'
-        p4 -c ${UEP4CLIENT} sync ${sync_flags} | {
-        while IFS= read -r line ; do
-            final_line=${line:0:((${#line}-1))}
-            p4Sync_parseSyncOutputLine ${final_line}
-        done
-        }
-        IFS=${OLD_IFS}
-    fi
+    echo "Logging in client '${UEP4CLIENT}' on host '${UEP4HOST}' via port '${UEP4PORT}'"
+    p4 -c ${UEP4CLIENT} login
 }
+
+# UE4 stuff
+alias ueConfigEdit="cygstart \"$UE_USER_CONFIG_PATH\""
+
 
 function p4MergeCheck()
 {
@@ -775,8 +671,13 @@ function vs_gen() {
     cd $DEVPATH
     WIN_UE_PROJ_PATH=$(cygpath -w ${UEPROJABSPATH})
 
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
     WINDOW_SPEW_CMND_EXE=$(printf "%q -projectfiles -project=\"%s\" -game -rocket -progress" "$UEBUILDTOOLPATH" "$WIN_UE_PROJ_PATH")
-    windowSpewCommand 3 1 "VSGen" 3 1
+    printf "  cmd: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n"
+    windowSpewCommand 5 1 "VSGen" 3 1
 }
 
 # build the game solution
@@ -784,8 +685,13 @@ function buildClient() {
     cd $DEVPATH
     WIN_UE_PROJ_PATH=$(cygpath -w ${UEPROJABSPATH})
 
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
     WINDOW_SPEW_CMND_EXE=$(printf "%q/Build.bat %q Win64 Development \"%s\" -waitmutex" "$UEBUILDSCRIPTSPATH" "$UEVSPROJTARGET" "$WIN_UE_PROJ_PATH")
-    windowSpewCommand 5 1 "bldCli" 3 1
+    printf "  cmd: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n"
+    windowSpewCommand 5 1 "bldCli" 3 0
 }
 
 # build the Editor Solution
@@ -793,8 +699,27 @@ function buildEditor() {
     cd $DEVPATH
     WIN_UE_PROJ_PATH=$(cygpath -w ${UEPROJABSPATH})
 
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
     WINDOW_SPEW_CMND_EXE=$(printf "%q/Build.bat %qEditor Win64 Development \"%s\" -waitmutex" "$UEBUILDSCRIPTSPATH" "$UEVSPROJTARGET" "$WIN_UE_PROJ_PATH")
-    windowSpewCommand 5 1 "bldEd" 3 1
+    printf "  cmd: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n"
+    windowSpewCommand 5 1 "bldEd" 3 0
+}
+
+# build the server solution
+function buildWinServ() {
+    cd $DEVPATH
+    WIN_UE_PROJ_PATH=$(cygpath -w ${UEPROJABSPATH})
+
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    WINDOW_SPEW_CMND_EXE=$(printf "%q/Build.bat %qServer Win64 Development \"%s\" -waitmutex" "$UEBUILDSCRIPTSPATH" "$UEVSPROJTARGET" "$WIN_UE_PROJ_PATH")
+    printf "  cmd: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n"
+    windowSpewCommand 5 1 "bldServ" 3 0
 }
 
 # run a command with output, and spew it to a window of a set amount of lines.
@@ -1022,14 +947,143 @@ function pullBuildEd() {
     ue
 }
 
-#Cooks minimum set of content by default, cooks all with -a/-all
-function ueCook() {
-    OPTIONAL_PARAMS=""
-    if [[ "$1" =~ ^(all|-all|--all|-a|--a)$ ]]; then
-        OPTIONAL_PARAMS="-cook_all"
-    fi
+function buildAll() {
+    cd $DEVPATH
+    #echo -en "\e[?25h" # Show Cursor..
+    PUR='\033[0;35m'
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+    printf "${PUR}--- Generating VS Solution...${NC}\n"
+    GEN_START=`date +%s.%N`
+    vs_gen
+    GEN_END=`date +%s.%N`
+    GEN_DUR=$( echo "$GEN_END - $GEN_START" | bc -l )
+    printf "${PUR}--- Generating VS Solution Complete! .. Time: %.02f s ${NC}\n" $GEN_DUR
 
-    unrealeditorcmd ${WIN_UE_PROJ_PATH} -run=cook -targetplatform=Windows -iterate -map=Lobby+MainMenu+TransitionMap+TransportShip+Transition_Airlock+s1c1l1_terminal+s1c1l2_crew+s1c1l3_mall
+    sleep 1
+    printf "${PUR}--- Building Editor Solution...${NC}\n"
+    BUILD_START=`date +%s.%N`
+    buildEditor
+    BUILD_END=`date +%s.%N`
+    BUILD_DUR=$( echo "$BUILD_END - $BUILD_START" | bc -l )
+    printf "${PUR}--- Building Editor Solution Complete! .. Time: %.02f s ${NC}\n" $BUILD_DUR
+
+    sleep 1
+    printf "${PUR}--- Building Client Solution...${NC}\n"
+    BUILD_CLI_START=`date +%s.%N`
+    buildClient
+    BUILD_CLI_END=`date +%s.%N`
+    BUILD_CLI_DUR=$( echo "$BUILD_CLI_END - $BUILD_CLI_START" | bc -l )
+    printf "${PUR}--- Building Client Solution Complete! .. Time: %.02f s ${NC}\n" $BUILD_CLI_DUR
+
+    sleep 1
+    printf "${PUR}--- Building WinServer Solution...${NC}\n"
+    BUILD_WINSERV_START=`date +%s.%N`
+    buildWinServ
+    BUILD_WINSERV_END=`date +%s.%N`
+    BUILD_WINSERV_DUR=$( echo "$BUILD_WINSERV_END - $BUILD_WINSERV_START" | bc -l )
+    printf "${PUR}--- Building WinServer Solution Complete! .. Time: %.02f s ${NC}\n" $BUILD_WINSERV_DUR
+
+    sleep 1
+    printf "${PUR}--- Cooking WinClient Content...${NC}\n"
+    COOK_CLI_START=`date +%s.%N`
+    ueCook
+    COOK_CLI_END=`date +%s.%N`
+    COOK_CLI_DUR=$( echo "$COOK_CLI_END - $COOK_CLI_START" | bc -l )
+    printf "${PUR}--- Cooking WinClient Content Complete! .. Time: %.02f s ${NC}\n" $COOK_CLI_DUR
+
+    sleep 1
+    printf "${PUR}--- Cooking WinServer Content...${NC}\n"
+    COOK_WINSERV_START=`date +%s.%N`
+    ueCookWinServer
+    COOK_WINSERV_END=`date +%s.%N`
+    COOK_WINSERV_DUR=$( echo "$COOK_WINSERV_END - $COOK_WINSERV_START" | bc -l )
+    printf "${PUR}--- Cooking WinServer Content Complete! .. Time: %.02f s ${NC}\n" $COOK_WINSERV_DUR
+
+    TOTAL_TIME=$( echo "($GEN_END - $GEN_START) + ($BUILD_END - $BUILD_START) + ($BUILD_CLI_END - $BUILD_CLI_START) + ($BUILD_WINSERV_END - $BUILD_WINSERV_START) + ($COOK_CLI_END - $COOK_CLI_START) + ($COOK_WINSERV_END - $COOK_WINSERV_START)" | bc -l )
+    TOTAL_TIME_MINS=$( echo "$TOTAL_TIME / 60.0" | bc -l )
+
+    printf "\n${CYN} pullAndBuild Complete.\n"
+    printf "        vs_gen: %.02f s\n" $GEN_DUR
+    printf "       buildEd: %.02f s\n" $BUILD_DUR
+    printf "      buildCli: %.02f s\n" $BUILD_CLI_DUR
+    printf "     buildServ: %.02f s\n" $BUILD_CLI_DUR
+    printf "       cookCli: %.02f s\n" $COOK_CLI_DUR
+    printf "      cookServ: %.02f s\n      ---------\n" $COOK_WINSERV_DUR
+    printf "         Total: %.02f s${NC} / %.02f m\n" $TOTAL_TIME $TOTAL_TIME_MINS
+}
+
+function ABSwitch() {
+    cd $DEVPATH
+    ./../Tools/SteamABSwitcher/bin/SteamABSwitcher.exe Config/DefaultEngine.ini ${1}
+}
+
+function ABBuildNum() {
+    cd $DEVPATH
+    SED_CMD=$(printf "s/BuildChangelist=.*$/BuildChangelist=%q/" "$1")
+    sed -i "$SED_CMD" Config/DefaultBuildSettings.ini
+}
+
+function ueCook() {
+    # Create the directory, Dumb: suppress output in case directory already exists. Also dumb: "WindowsNoEditor" folder sometimes has trouble being created by the tool (permissions issues), so create that for it here.
+    mkdir "$BuildDirName" 2>/dev/null;
+    mkdir "$BuildDirName"/WindowsNoEditor 2>/dev/null;
+    
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    # Gather required windows path (basically, anything passed in via parameter)
+    WIN_BuildDirName=$(cygpath -w -m "$BuildDirName")
+    WIN_UE_PROJ_PATH=$(cygpath -w -m "$UEPROJABSPATH")
+
+    # Create the Package Command
+    WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -platform=\"Win64\" -clientconfig=\"Development\" -cook" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH")
+
+    printf "              UE: ${CYN}${UE_PATH}${NC}\n"
+    printf "        UProject: ${CYN}${WIN_UE_PROJ_PATH}${NC}\n"
+    printf " Package Command: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n\n"
+    windowSpewCommand 16 1 "UECook" 5 0
+}
+
+function ueCookWinServer() {
+    # Create the directory, Dumb: suppress output in case directory already exists. Also dumb: "WindowsNoEditor" folder sometimes has trouble being created by the tool (permissions issues), so create that for it here.
+    mkdir "$BuildDirName" 2>/dev/null;
+    mkdir "$BuildDirName"/WindowsNoEditor 2>/dev/null;
+    
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    # Gather required windows path (basically, anything passed in via parameter)
+    WIN_BuildDirName=$(cygpath -w -m "$BuildDirName")
+    WIN_UE_PROJ_PATH=$(cygpath -w -m "$UEPROJABSPATH")
+
+    # Create the Package Command
+    WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -targetplatform=Win64 -target=AnacrusisServer -serverconfig=Development -nocompileeditor -cook" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH")
+
+    printf "              UE: ${CYN}${UE_PATH}${NC}\n"
+    printf "        UProject: ${CYN}${WIN_UE_PROJ_PATH}${NC}\n"
+    printf " Package Command: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n\n"
+    windowSpewCommand 16 1 "UECook" 5 0
+}
+
+function ueCookAll() {
+    echo "Cook Win Server"
+    ueCookWinServer
+    echo "Cook Client"
+    ueCook
+}
+
+function ueCleanWorkspace() {
+    rm -rf "$DEVPATH"/.vs
+    rm -rf "$DEVPATH"/Build
+    rm -rf "$DEVPATH"/DerivedDataCache
+    rm -rf "$DEVPATH"/Intermediate
+    rm -rf "$DEVPATH"/Saved
+    rm -r "$UESOLUTIONPATH"
+
+    cd $DEVPATH
 }
 
 function runClangOnSource_convertToWinPathAndCheckout() {
@@ -1045,6 +1099,386 @@ function runClangOnSource_formatFile() {
     echo -e "\e[0K\r         .. ${2} \\ ${3} clang-format on file: '${1}'" 
     "$CLANG_PATH" -style=file -i "$1"
 }
+
+# Meant to package in the same way we do on Team City..
+# sample command: C:\UE4_Dist\UE_4.25\Engine\Build\BatchFiles/RunUAT BuildCookRun -project="D:\w\e7f7a0de1a57bc52\supreme_blitheness\supreme_blitheness.uproject" -noP4 -unattended -build -platform="Win64" -clientconfig="Development" -cook -stage -archive -archivedirectory="D:\w\e7f7a0de1a57bc52\output" 
+function uePackage() {
+    BuildDirName="default"
+    if [ $# -ne 0 ]; then
+        BuildDirName="$1"
+    fi
+
+    BuildDirName="$BUILD_OUTPUT_DIR"/"$BuildDirName"
+
+    # Create the directory, Dumb: suppress output in case directory already exists. Also dumb: "WindowsNoEditor" folder sometimes has trouble being created by the tool (permissions issues), so create that for it here.
+    mkdir "$BuildDirName" 2>/dev/null;
+    mkdir "$BuildDirName"/WindowsNoEditor 2>/dev/null;
+    
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    # Gather required windows path (basically, anything passed in via parameter)
+    WIN_BuildDirName=$(cygpath -w -m "$BuildDirName")
+    WIN_UE_PROJ_PATH=$(cygpath -w -m "$UEPROJABSPATH")
+
+    # Create the Package Command
+    WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -build -platform=\"Win64\" -clientconfig=\"Development\" -cook -cookflavor=multi -stage -archive -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
+
+    printf "  Build Output Directory: ${CYN}${WIN_BuildDirName}${NC}\n"
+    printf "                      UE: ${CYN}${UE_PATH}${NC}\n"
+    printf "                UProject: ${CYN}${WIN_UE_PROJ_PATH}${NC}\n"
+    printf "   Package Command: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n\n"
+    windowSpewCommand 16 1 "UEPkg" 5 0
+}
+
+function uePackageXSX() {
+    BuildDirName="defaultXSX"
+    if [ $# -ne 0 ]; then
+        BuildDirName="$1"
+    fi
+
+    BuildDirName="$BUILD_OUTPUT_DIR"/"$BuildDirName"
+
+    # Create the directory, Dumb: suppress output in case directory already exists. Also dumb: "WindowsNoEditor" folder sometimes has trouble being created by the tool (permissions issues), so create that for it here.
+    mkdir "$BuildDirName" 2>/dev/null;
+    mkdir "$BuildDirName"/WindowsNoEditor 2>/dev/null;
+    
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    # Gather required windows path (basically, anything passed in via parameter)
+    WIN_BuildDirName=$(cygpath -w -m "$BuildDirName")
+    WIN_UE_PROJ_PATH=$(cygpath -w -m "$UEPROJABSPATH")
+
+    # Create the Package Command
+    WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -build -platform=\"XSX\" -clientconfig=\"Development\" -nocompileeditor -cook -cookflavor=multi -stage -pak -deploy -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
+
+    printf "  Build Output Directory: ${CYN}${WIN_BuildDirName}${NC}\n"
+    printf "                      UE: ${CYN}${UE_PATH}${NC}\n"
+    printf "                UProject: ${CYN}${WIN_UE_PROJ_PATH}${NC}\n"
+    printf "   Package Command: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n\n"
+    windowSpewCommand 16 1 "UEPkgXSX" 5 0
+}
+
+function uePackageXSXShip() {
+    BuildDirName="defaultXSXShip"
+    if [ $# -ne 0 ]; then
+        BuildDirName="$1"
+    fi
+
+    BuildDirName="$BUILD_OUTPUT_DIR"/"$BuildDirName"
+
+    # Create the directory, Dumb: suppress output in case directory already exists. Also dumb: "WindowsNoEditor" folder sometimes has trouble being created by the tool (permissions issues), so create that for it here.
+    mkdir "$BuildDirName" 2>/dev/null;
+    mkdir "$BuildDirName"/WindowsNoEditor 2>/dev/null;
+    
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    # Gather required windows path (basically, anything passed in via parameter)
+    WIN_BuildDirName=$(cygpath -w -m "$BuildDirName")
+    WIN_UE_PROJ_PATH=$(cygpath -w -m "$UEPROJABSPATH")
+
+    # Create the Package Command
+    WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -build -platform=\"XSX\" -clientconfig=\"Development\" -nocompileeditor -cook -cookflavor=multi -stage -pak -package -deploy -archive -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
+
+    printf "  Build Output Directory: ${CYN}${WIN_BuildDirName}${NC}\n"
+    printf "                      UE: ${CYN}${UE_PATH}${NC}\n"
+    printf "                UProject: ${CYN}${WIN_UE_PROJ_PATH}${NC}\n"
+    printf "   Package Command: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n\n"
+    windowSpewCommand 16 1 "UEPkgXSX" 5 0
+}
+
+function uePackageXBONEGDK() {
+    BuildDirName="defaultXBONEGDK"
+    if [ $# -ne 0 ]; then
+        BuildDirName="$1"
+    fi
+
+    BuildDirName="$BUILD_OUTPUT_DIR"/"$BuildDirName"
+
+    # Create the directory, Dumb: suppress output in case directory already exists. Also dumb: "WindowsNoEditor" folder sometimes has trouble being created by the tool (permissions issues), so create that for it here.
+    mkdir "$BuildDirName" 2>/dev/null;
+    mkdir "$BuildDirName"/WindowsNoEditor 2>/dev/null;
+    
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    # Gather required windows path (basically, anything passed in via parameter)
+    WIN_BuildDirName=$(cygpath -w -m "$BuildDirName")
+    WIN_UE_PROJ_PATH=$(cygpath -w -m "$UEPROJABSPATH")
+
+    # Create the Package Command
+    WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -build -platform=\"XboxOneGDK\" -clientconfig=\"Development\" -nocompileeditor -cook -cookflavor=multi -stage -pak -deploy -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
+
+    printf "  Build Output Directory: ${CYN}${WIN_BuildDirName}${NC}\n"
+    printf "                      UE: ${CYN}${UE_PATH}${NC}\n"
+    printf "                UProject: ${CYN}${WIN_UE_PROJ_PATH}${NC}\n"
+    printf "   Package Command: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n\n"
+    windowSpewCommand 16 1 "UEPkgXBONEGDK" 5 0
+}
+
+function uePackageXBONEGDKCL() {
+    BuildCL="0000"
+    if [ $# -ne 0 ]; then
+        BuildCL="$1"
+    fi
+
+    p4SyncCL $1
+    vs_gen
+    ABBuildNum $1
+    buildEditor
+    uePackageXBONEGDK
+}
+
+function uePackageXBONEGDKShip() {
+    BuildDirName="defaultXBONEGDKShip"
+    if [ $# -ne 0 ]; then
+        BuildDirName="$1"
+    fi
+
+    BuildDirName="$BUILD_OUTPUT_DIR"/"$BuildDirName"
+
+    # Create the directory, Dumb: suppress output in case directory already exists. Also dumb: "WindowsNoEditor" folder sometimes has trouble being created by the tool (permissions issues), so create that for it here.
+    mkdir "$BuildDirName" 2>/dev/null;
+    mkdir "$BuildDirName"/WindowsNoEditor 2>/dev/null;
+    
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    # Gather required windows path (basically, anything passed in via parameter)
+    WIN_BuildDirName=$(cygpath -w -m "$BuildDirName")
+    WIN_UE_PROJ_PATH=$(cygpath -w -m "$UEPROJABSPATH")
+
+    # Create the Package Command
+    WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -build -platform=\"XboxOneGDK\" -clientconfig=\"Shipping\" -nocompileeditor -cook -cookflavor=multi -stage -pak -package -archive -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
+
+    printf "  Build Output Directory: ${CYN}${WIN_BuildDirName}${NC}\n"
+    printf "                      UE: ${CYN}${UE_PATH}${NC}\n"
+    printf "                UProject: ${CYN}${WIN_UE_PROJ_PATH}${NC}\n"
+    printf "   Package Command: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n\n"
+    windowSpewCommand 16 1 "UEPkgXBONEGDK" 5 0
+}
+
+function uePackageWinSteamShip() {
+    BuildDirName="defaultWinGDK"
+    if [ $# -ne 0 ]; then
+        BuildDirName="$1"
+    fi
+
+    BuildDirName="$BUILD_OUTPUT_DIR"/"$BuildDirName"
+
+    # Create the directory, Dumb: suppress output in case directory already exists. Also dumb: "WindowsNoEditor" folder sometimes has trouble being created by the tool (permissions issues), so create that for it here.
+    mkdir "$BuildDirName" 2>/dev/null;
+    mkdir "$BuildDirName"/WindowsNoEditor 2>/dev/null;
+    
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    # Gather required windows path (basically, anything passed in via parameter)
+    WIN_BuildDirName=$(cygpath -w -m "$BuildDirName")
+    WIN_UE_PROJ_PATH=$(cygpath -w -m "$UEPROJABSPATH")
+
+    # Create the Package Command
+    WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -build -platform=\"Win64\" -clientconfig=\"Shipping\" -nocompileeditor -cook -cookflavor=multi -stage -pak -package -archive -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
+
+    printf "  Build Output Directory: ${CYN}${WIN_BuildDirName}${NC}\n"
+    printf "                      UE: ${CYN}${UE_PATH}${NC}\n"
+    printf "                UProject: ${CYN}${WIN_UE_PROJ_PATH}${NC}\n"
+    printf "   Package Command: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n\n"
+    windowSpewCommand 16 1 "UEPkgWinGDK" 5 0
+}
+
+function uePackageWinGDKShip() {
+    BuildDirName="defaultWinGDK"
+    if [ $# -ne 0 ]; then
+        BuildDirName="$1"
+    fi
+
+    BuildDirName="$BUILD_OUTPUT_DIR"/"$BuildDirName"
+
+    # Create the directory, Dumb: suppress output in case directory already exists. Also dumb: "WindowsNoEditor" folder sometimes has trouble being created by the tool (permissions issues), so create that for it here.
+    mkdir "$BuildDirName" 2>/dev/null;
+    mkdir "$BuildDirName"/WindowsNoEditor 2>/dev/null;
+    
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    # Gather required windows path (basically, anything passed in via parameter)
+    WIN_BuildDirName=$(cygpath -w -m "$BuildDirName")
+    WIN_UE_PROJ_PATH=$(cygpath -w -m "$UEPROJABSPATH")
+
+    # Create the Package Command
+    WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -build -platform=\"WinGDK\" -clientconfig=\"Shipping\" -nocompileeditor -cook -cookflavor=multi -stage -pak -package -archive -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
+
+    printf "  Build Output Directory: ${CYN}${WIN_BuildDirName}${NC}\n"
+    printf "                      UE: ${CYN}${UE_PATH}${NC}\n"
+    printf "                UProject: ${CYN}${WIN_UE_PROJ_PATH}${NC}\n"
+    printf "   Package Command: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n\n"
+    windowSpewCommand 16 1 "UEPkgWinGDK" 5 0
+}
+
+function uePackageWinServer() {
+    BuildDirName="defaultWinServer"
+    if [ $# -ne 0 ]; then
+        BuildDirName="$1"
+    fi
+
+    BuildDirName="$BUILD_OUTPUT_DIR"/"$BuildDirName"
+
+    # Create the directory, Dumb: suppress output in case directory already exists. Also dumb: "WindowsNoEditor" folder sometimes has trouble being created by the tool (permissions issues), so create that for it here.
+    mkdir "$BuildDirName" 2>/dev/null;
+    mkdir "$BuildDirName"/WindowsNoEditor 2>/dev/null;
+    
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    # Gather required windows path (basically, anything passed in via parameter)
+    WIN_BuildDirName=$(cygpath -w -m "$BuildDirName")
+    WIN_UE_PROJ_PATH=$(cygpath -w -m "$UEPROJABSPATH")
+
+    # Create the Package Command
+    WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -build -platform=\"Win64\" -targetplatform=Win64 -target=AnacrusisServer -serverconfig=Development -nocompileeditor -cook -cookflavor=multi -stage -pak -archive -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
+
+    printf "  Build Output Directory: ${CYN}${WIN_BuildDirName}${NC}\n"
+    printf "                      UE: ${CYN}${UE_PATH}${NC}\n"
+    printf "                UProject: ${CYN}${WIN_UE_PROJ_PATH}${NC}\n"
+    printf "   Package Command: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n\n"
+    windowSpewCommand 16 1 "UEPkgSer" 5 0
+}
+
+function uePackageLinServ() {
+    BuildDirName="defaultLinServer"
+    if [ $# -ne 0 ]; then
+        BuildDirName="$1"
+    fi
+
+    BuildDirName="$BUILD_OUTPUT_DIR"/"$BuildDirName"
+
+    # Create the directory, Dumb: suppress output in case directory already exists. Also dumb: "WindowsNoEditor" folder sometimes has trouble being created by the tool (permissions issues), so create that for it here.
+    mkdir "$BuildDirName" 2>/dev/null;
+    mkdir "$BuildDirName"/WindowsNoEditor 2>/dev/null;
+    
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    # Gather required windows path (basically, anything passed in via parameter)
+    WIN_BuildDirName=$(cygpath -w -m "$BuildDirName")
+    WIN_UE_PROJ_PATH=$(cygpath -w -m "$UEPROJABSPATH")
+
+    # Create the Package Command
+    WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -serverplatform="Linux" -server -serverconfig="Development" -noclient -cook -cookflavor=multi -allmaps -build -stage -pak -package -archive -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
+
+    printf "  Build Output Directory: ${CYN}${WIN_BuildDirName}${NC}\n"
+    printf "                      UE: ${CYN}${UE_PATH}${NC}\n"
+    printf "                UProject: ${CYN}${WIN_UE_PROJ_PATH}${NC}\n"
+    printf "   Package Command: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n\n"
+    windowSpewCommand 16 1 "UEPkgLinSer" 5 0
+}
+
+# User "p4" without '/cygdrive' paths!  - https://stackoverflow.com/questions/2111251/issues-using-perforce-command-line-under-cygwin
+function p4() {
+export PWD=`cygpath -wa .`
+/cygdrive/c/Program\ Files/Perforce/p4.exe $@
+}
+
+function p4Sync() {
+    cd $DEVPATH
+
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    printf "  Force P4 Sync Workspace: ${CYN}${UEP4CLIENT}${NC}\n"
+
+    P4SYNC_OUTPUT=$(p4 -c ${UEP4CLIENT} sync -n)
+    P4SYNC_OUTPUT_COUNT=$(echo "${P4SYNC_OUTPUT}" | wc -l)
+
+    printf "  Files To Sync: ${CYN}${P4SYNC_OUTPUT_COUNT}${NC}\n"
+    
+    #echo "    Continue? (y)es / (n)no: "
+    while true; do
+        read -p "    Continue? (y)es / (n)no: " yn
+        case $yn in
+            [Yy]* ) break;;
+            [Nn]* ) echo " ..exiting without doing anything.. "; return;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+
+    WINDOW_SPEW_CMND_EXE=$(printf "p4 -c %s sync" "$UEP4CLIENT")
+    windowSpewCommand 5 1 "p4Sync" 6 0
+}
+
+function p4SyncCL() {
+    p4sethost
+    p4 -c ${UEP4CLIENT} sync @${1}
+}
+
+function p4ForceSync() {
+    cd $DEVPATH
+
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    printf "  Force P4 Sync Workspace: ${CYN}${UEP4CLIENT}${NC}\n"
+
+    P4SYNC_OUTPUT=$(p4 -c ${UEP4CLIENT} sync -f -n)
+    P4SYNC_OUTPUT_COUNT=$(echo "${P4SYNC_OUTPUT}" | wc -l)
+
+    printf "  Files To Sync: ${CYN}${P4SYNC_OUTPUT_COUNT}${NC}\n"
+
+    #echo "    Continue? (y)es / (n)no: "
+    while true; do
+        read -p "    Continue? (y)es / (n)no: " yn
+        case $yn in
+            [Yy]* ) break;;
+            [Nn]* ) echo " ..exiting without doing anything.. "; return;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+
+    WINDOW_SPEW_CMND_EXE=$(printf "p4 -c %s sync -f" "$UEP4CLIENT")
+    windowSpewCommand 5 1 "p4Sync" 6 0
+}
+
+function ueBuildLightingXSX() {
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    WIN_UE_PROJ_PATH=$(cygpath -w ${UEPROJABSPATH})
+
+    #unrealeditorcmd ${WIN_UE_PROJ_PATH} -run=resavepackages -targetplatform=XSX -buildlighting -quality=Production -allowcommandletrendering -iterate -map=Lobby+MainMenu+TransitionMap+TransportShip+Transition_Airlock+s1c1l1_terminal+s1c1l2_crew+s1c1l3_mall
+    WINDOW_SPEW_CMND_EXE=$(printf "%q %q -run=resavepackages -targetplatform=XSX -buildlighting -buildreflectioncaptures -quality=Production -allowcommandletrendering -iterate -map=Lobby+MainMenu+TransitionMap+TransportShip+Transition_Airlock+s1c1l1_terminal+s1c1l2_crew+s1c1l3_mall" "$UEEDITORCMDPATH" "$WIN_UE_PROJ_PATH")
+    printf "  buildCmnd: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n"
+    windowSpewCommand 15 1 "ueLighting" 6 0
+}
+
+function ueBuildLighting() {
+    #Text colors
+    CYN='\033[0;36m'
+    NC='\033[0m' # No Color
+
+    WIN_UE_PROJ_PATH=$(cygpath -w ${UEPROJABSPATH})
+
+    #unrealeditorcmd ${WIN_UE_PROJ_PATH} -run=resavepackages -targetplatform=XSX -buildlighting -quality=Production -allowcommandletrendering -iterate -map=Lobby+MainMenu+TransitionMap+TransportShip+Transition_Airlock+s1c1l1_terminal+s1c1l2_crew+s1c1l3_mall
+    #WINDOW_SPEW_CMND_EXE=$(printf "%q %q -run=resavepackages -targetplatform=Windows -buildlighting -buildreflectioncaptures -quality=Production -allowcommandletrendering -iterate -map=Lobby+MainMenu+TransitionMap+TransportShip+Transition_Airlock+s1c1l1_terminal+s1c1l2_crew+s1c1l3_mall" "$UEEDITORCMDPATH" "$WIN_UE_PROJ_PATH")
+    WINDOW_SPEW_CMND_EXE=$(printf "%q %q -run=resavepackages -buildlighting -buildreflectioncaptures -quality=Production -allowcommandletrendering -iterate -map=s1c1l1_terminal" "$UEEDITORCMDPATH" "$WIN_UE_PROJ_PATH")
+    printf "  buildCmnd: ${CYN}${WINDOW_SPEW_CMND_EXE}${NC}\n"
+    windowSpewCommand 50 1 "ueLighting" 6 0
+}
+
 
 ## Clang! - Run clang on the full source directory using the project's clang format
 function runClangOnSource() {
@@ -1150,6 +1584,41 @@ function hard_restart() {
 
 function signout() {
     shutdown -l
+}
+
+## Monitor shortcuts
+function dualDisplays() {
+    MultiMonitorTool.exe /LoadConfig "c:\cygwin64\home\timot\_mmt_2_displays.cfg"
+}
+
+function singleDisplay() {
+    MultiMonitorTool.exe /LoadConfig "c:\cygwin64\home\timot\_mmt_1_display_right.cfg"
+}
+
+function singleDisplayL() {
+    MultiMonitorTool.exe /LoadConfig "c:\cygwin64\home\timot\_mmt_1_display_left.cfg"
+}
+
+function singleDisplayR() {
+    MultiMonitorTool.exe /LoadConfig "c:\cygwin64\home\timot\_mmt_1_display_right.cfg"
+}
+
+## Laptop CPU shortcuts
+function stealthCPU() {
+    devcon disable "PCI\VEN_10DE&DEV_1F91&SUBSYS_10011A58&REV_A1"
+}
+
+function stealthGPU() {
+    devcon enable "PCI\VEN_10DE&DEV_1F91&SUBSYS_10011A58&REV_A1"
+}
+
+## PC Sound Device shorcuts
+function aSpeaker() {
+    nircmd setdefaultsounddevice "Realtek Digital Output" 1
+}
+
+function aHeadphones() {
+    nircmd setdefaultsounddevice "Headphones" 1
 }
 
 ################################### Fast Drive Symlink System.. Simple system to junction a workspace on a slow drive to a folder on a fast drive
