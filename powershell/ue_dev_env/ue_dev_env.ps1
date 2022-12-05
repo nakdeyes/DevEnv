@@ -132,6 +132,7 @@ function dev_ue_set_paths
     $global:UE_Insights         = "$($CurrentWorkspace.EnginePath)\Engine\Binaries\Win64\UnrealInsights.exe"
     $global:UE_BuildTool        = "$($CurrentWorkspace.EnginePath)\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.exe"
 
+    $global:UE_VSSolution = ""
     # check to see if project is inside UE dir or project dir
     if ($($CurrentWorkspace.ProjectPath).Contains($($CurrentWorkspace.EnginePath)))
     {
