@@ -358,6 +358,19 @@ function build
     #Start-Process -FilePath "$UE_BuildScript" -ArgumentList "$BuildProjectName Win64 $BuildSpecID $($CurrentWorkspace.ProjectPath) -waitmutex" -NoNewWindow -Wait -PassThru
 }
 
+function buildShaderCompilerWorker
+{
+    $BuildCommand = ". $UE_BuildScript ShaderCompileWorker Win64 Development"
+
+    Microsoft.PowerShell.Utility\Write-Host "    BUILD: " -NoNewLine -ForegroundColor "DarkCyan"
+    Microsoft.PowerShell.Utility\Write-Host "$BuildSpecID - $BuildConfigID" -ForegroundColor "Cyan"
+    Microsoft.PowerShell.Utility\Write-Host "  command: " -NoNewLine -ForegroundColor "DarkCyan"
+    Microsoft.PowerShell.Utility\Write-Host "'$BuildCommand'" -ForegroundColor "Cyan"
+
+    Invoke-Expression -Command $BuildCommand
+    $env:LASTEXITCODE = $global:LASTEXITCODE
+}
+
 function cook
 {
     Param
@@ -439,6 +452,7 @@ function run
     {   
         "Client" { 
             $ConfigRunCommand = "$($UE_ProjectName).exe $($map)"
+            
             if ($clientConnect -eq 1)
             {
                 $ConfigRunCommand = $ConfigRunCommand + " 127.0.0.1 ? service_uri=premium.firewalkcloud.com"
@@ -524,7 +538,7 @@ function package
     }
 
     ##WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -build -platform=\"XSX\" -clientconfig=\"Development\" -nocompileeditor -cook -cookflavor=multi -stage -pak -package -deploy -archive -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
-    $PackageCommand = ". $UE_UAT BuildCookRun -project='$($CurrentWorkspace.ProjectPath)' -noP4 -unattended -build -platform='$($PlatformID)' -clientconfig=$($ConfigID) -nocompileeditor -cook -cookflavor=multi $ConfigSpecificArgs -stage -package -archive -archivedirectory='$($archivePath)'"
+    $PackageCommand = ". $UE_UAT BuildCookRun -project='$($CurrentWorkspace.ProjectPath)' -noP4 -unattended -build -platform='$($PlatformID)' -clientconfig=$($ConfigID) -nocompileeditor -cook -cookflavor=multi $ConfigSpecificArgs -stage -pak -package -archive -archivedirectory='$($archivePath)'"
 
     Microsoft.PowerShell.Utility\Write-Host "      package: " -NoNewLine -ForegroundColor "DarkCyan"
     Microsoft.PowerShell.Utility\Write-Host "$PlatformID - $SpecID - $ConfigID -> $archivePath" -ForegroundColor "Cyan"
@@ -720,6 +734,133 @@ function p4NewestPurged
     Write-Output "      $($newestPurgedFileInfo)"
     Write-Output " CL# $($newestPurgedCL) Info:"
     Invoke-Expression "p4 describe -s $($newestPurgedCL)"
+}
+
+# A function to add or remove filetype flags on many files in bulk. 
+function p4BulkChangefiletype
+{
+    Param
+    (
+        # The P4 path of files to look at
+        [string]$p4Path     = "//chaos/main/Unreal/...",
+
+        # Extra match / not match patterns that can be used to select files
+        [string]$match_pattern = " ",
+        [string]$not_match_pattern = "BuiltData|Subtitles|ContentSource",
+
+        # The file type pattern of files to change filetype
+        [string]$filetype_match_pattern = "S",
+
+        # The new file type
+        [string]$new_filetype = "binary+l",
+
+        # Flag to actually request the file type change (else will just print)
+        [int]$do_filetype_change = 0,
+
+        # Verbose output spew for debugging and verbose info.
+        [int]$verbose = 0
+    )
+
+    # Get existing filetype ( parse from last paren)
+    # p4 files //Chaos/main/Unreal/Chaos/Content/Berserker_3P_Looping_01_AM.uasset
+
+    #init
+    [int]$filecounter = 0
+    [int]$correct_filetype_counter = 0
+    [int]$successful_edit_counter = 0
+
+    [string]$P4Command = "p4 files -e $($p4Path)"
+
+    Write-Output ""
+    Write-Output " P4 Bulk File type change"
+    Write-Output "      **          Expression: '$($P4Command)'"
+    Write-Output ""
+    Write-Output "      ** File Include Filter: '$($match_pattern)'"
+    Write-Output "      ** File Exclude Filter: '$($not_match_pattern)'"
+    Write-Output ""
+    Write-Output "      **    file type filter: '$($filetype_match_pattern)'"
+    Write-Output "      **       new file type: '$($new_filetype)'"
+
+    if ($do_filetype_change)
+    {
+        Write-Output ""
+        Write-Output "      **      --- DOING FILE TYPE CHANGE! ---"
+    }
+    else
+    {
+        Write-Output ""
+        Write-Output "      **      --- not changing files.. run with '-do_filetype_change:1' to change file type! ---"
+    }
+    
+    if ($verbose)
+    {
+        Write-Output ""
+        Write-Output "      **      ---verbose ENABLED---"
+    }
+    Write-Output ""
+    Write-Output ""
+
+    Invoke-Expression $P4Command | Select-String -Pattern $match_pattern | Select-String -Pattern $not_match_pattern -NotMatch | ForEach-Object { 
+        
+        $filecounter = $filecounter + 1
+        [string]$fullFileString = $_.ToString()
+        [string]$fileNameString = $fullFileString.Substring(0, $fullFileString.IndexOf('#'))
+        [int]$lastParenCloseInd = $fullFileString.LastIndexOf(')')
+        [int]$lastParenOpenInd = $fullFileString.LastIndexOf('(', $lastParenCloseInd)
+        [string]$filetypeStr = $fullFileString.Substring($lastParenOpenInd+1, $lastParenCloseInd - $lastParenOpenInd - 1)
+
+        [int]$fileTypeMatchInd = $filetypeStr.IndexOf($filetype_match_pattern)
+        [bool]$filetypeMatches = ($fileTypeMatchInd -ge 0 )
+
+        if ($filetypeMatches)
+        {
+            $correct_filetype_counter = $correct_filetype_counter + 1
+
+            if ($do_filetype_change)
+            {
+                [string]$p4EditCommand = "p4 edit -t $($new_filetype) $($fileNameString)"
+                [string]$editCmdOutput = Invoke-Expression $p4EditCommand
+                [bool]$commandSucceeded = ($editCmdOutput.IndexOf("opened for edit") -ge 0)
+                
+                if ($commandSucceeded)
+                {
+                    $successful_edit_counter = $successful_edit_counter + 1
+                }
+                
+                if ($verbose)
+                {
+                    Write-Output "    doing edit cmd: '$($p4EditCommand)'"
+                    Write-Output "   edit cmd output: $($editCmdOutput)"
+                    Write-Output "      edit success: $($commandSucceeded)"
+                }
+            }
+        }
+
+        if ($verbose)
+        {
+            Write-Output " file $($filecounter) - type: '$($filetypeStr)' match? $($filetypeMatches) - filename: $($fileNameString)"
+            Write-Output "      full file string: '$($fullFileString)'" 
+        }
+    }
+
+    Write-Output ""
+    Write-Output "    FINISHED"
+    Write-Output ""
+    Write-Output "   Found $($filecounter) files. Of those files, $($correct_filetype_counter) of those files matched file type filter '$($filetype_match_pattern)'"
+    Write-Output ""
+    Write-Output "             Successful attempted file edits: $($successful_edit_counter) / $($correct_filetype_counter)"
+    Write-Output ""
+
+    if ($do_filetype_change)
+    {
+        Write-Output "   DO FILE TYPE CHANGE ENABLED - edited $($correct_filetype_counter) files and changed file type to '$($new_filetype)'"
+        Write-Output ""
+    }
+    else
+    {
+       Write-Output "      **      --- run with '-do_filetype_change:1' to change file type! ---"
+        Write-Output ""
+    }
 }
 
 function p4GetAverageRevisionSize
@@ -1011,8 +1152,8 @@ dev a
 ####################################################
 ##### OMG You are so lame.. Scratch notes section! 
 
-# params to add to VS to profile
-# -trace="cpu,frame,bookmark" -statnamedevents -tracehost=127.0.0.1
+## Command line args to launch perf flythrough
+# Revolt_Persistent?game=/Game/Modes/BeautifulCorner/BeautifulCorner_GM.BeautifulCorner_GM_C -ExecCmds="FWWorldPerfFlythrough.Enable 1"
 
 ### Print all the members of some object, like a file Item
 #(Get-Item $CurrentWorkspace.ProjectPath) | Get-Member
