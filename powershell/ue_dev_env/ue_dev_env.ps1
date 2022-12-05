@@ -138,7 +138,9 @@ function dev_ue_set_paths
         # Project is inside engine directory, user should use UE .sln in engine dir
         $global:UE_VSSolution = "$($CurrentWorkspace.EnginePath)\UE5.sln"
     }
-    else
+    
+
+    if (!(Test-Path -Path $global:UE_VSSolution -PathType Leaf))
     {
         # Project is in it's own directory, use Proejct .sln in project dir
         $global:UE_VSSolution = "$UE_ProjectDirectory\$UE_ProjectName.sln"
@@ -298,13 +300,17 @@ function env_script_reload
 ## UE stuff - Building
 function vs_gen 
 {
+    # Just use GenerateProjectFiles.bat
     # $GenProjBat = "$($CurrentWorkspace.EnginePath)\Engine\Build\BatchFiles\GenerateProjectFiles.bat"
+    # $GenerateCommand = ". $($GenProjBat) $($CurrentWorkspace.ProjectPath) -rocket -progress"
 
-    # . $GenProjBat "$UE_UProject" -progress
-
+    # Generate commands with Unreal Build Tool. Works great, but not if it isn't compiled yet :D
     $GenerateCommand = ". $global:UE_BuildTool -projectfiles -project=$($CurrentWorkspace.ProjectPath) -game -engine -rocket -progress"
+
     echo " generate project files command: $GenerateCommand"
     Invoke-Expression $GenerateCommand
+
+    dev_ue_set_paths
 }
 
 function build
