@@ -16,7 +16,7 @@ set smartindent
 " Plug ins
 
 call plug#begin()
-Plug 'neoclide/coc.vim', { 'branch': 'release' }
+Plug 'neoclide/coc.nvim', {'branch': 'master', 'do': 'yarn install --frozen-lockfile'}
 Plug 'preservim/nerdtree'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'

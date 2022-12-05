@@ -207,37 +207,46 @@ function stats
     echo $($StatsString)
 }
 
-function Convert-Size {            
-[cmdletbinding()]            
-param(            
-    [validateset("Bytes","KB","MB","GB","TB")]            
-    [string]$From,            
-    [validateset("Bytes","KB","MB","GB","TB")]            
-    [string]$To,            
-    [Parameter(Mandatory=$true)]            
-    [double]$Value,            
-    [int]$Precision = 4            
-)            
-switch($From) {            
-    "Bytes" {$value = $Value }            
-    "KB" {$value = $Value * 1024 }            
-    "MB" {$value = $Value * 1024 * 1024}            
-    "GB" {$value = $Value * 1024 * 1024 * 1024}            
-    "TB" {$value = $Value * 1024 * 1024 * 1024 * 1024}            
-}            
-            
-switch ($To) {            
-    "Bytes" {return $value}            
-    "KB" {$Value = $Value/1KB}            
-    "MB" {$Value = $Value/1MB}            
-    "GB" {$Value = $Value/1GB}            
-    "TB" {$Value = $Value/1TB}            
-            
-}            
-            
-return [Math]::Round($value,$Precision,[MidPointRounding]::AwayFromZero)            
-            
-}  
+function Convert-Size {
+    [cmdletbinding()]
+    param(
+        [validateset("Bytes","KB","MB","GB","TB")]
+        [string]$From,
+        [validateset("Bytes","KB","MB","GB","TB")]
+        [string]$To,
+        [Parameter(Mandatory=$true)]
+        [double]$Value,
+        [int]$Precision = 4
+    )
+
+    switch($From) {
+        "Bytes" {$value = $Value }
+        "KB" {$value = $Value * 1024 }
+        "MB" {$value = $Value * 1024 * 1024}
+        "GB" {$value = $Value * 1024 * 1024 * 1024}
+        "TB" {$value = $Value * 1024 * 1024 * 1024 * 1024}
+    }
+               
+    switch ($To) {
+        "Bytes" {return $value}
+        "KB" {$Value = $Value/1KB}
+        "MB" {$Value = $Value/1MB}
+        "GB" {$Value = $Value/1GB}
+        "TB" {$Value = $Value/1TB}
+    }
+               
+    return [Math]::Round($value,$Precision,[MidPointRounding]::AwayFromZero)
+}
+
+function Test-CommandExists
+{
+    Param ($command)
+    $oldPreference = $ErrorActionPreference
+    $ErrorActionPreference = ‘stop’
+    try {if(Get-Command $command){RETURN $true}}
+    Catch {Write-Host “$command does not exist”; RETURN $false}
+    Finally {$ErrorActionPreference=$oldPreference}
+} #end function test-CommandExists
 
 function env_install_prereqs()
 {
@@ -274,6 +283,74 @@ function env_install_prereqs()
     Pop-Location
     Get-ChildItem -Path "$TempZipDir" -Recurse | Remove-Item -force -recurse
     Remove-Item "$TempZipDir" -Force 
+}
+
+function env_install_vim()
+{
+    Write-Host " **** Installing VIM **** "
+
+    ## Scoop
+    if (Test-CommandExists "scoop")
+    {
+        Write-Host "  scoop detected.. skipping.."
+    }
+    else
+    {
+        Write-Host "  installing scoop..."
+        Invoke-Expression "iwr -useb get.scoop.sh | iex"
+    }
+
+    ## git
+    if (Test-CommandExists "git")
+    {
+        Write-Host "  git detected.. skipping.."
+    }
+    else
+    {
+        Write-Host "  installing git..."
+        Invoke-Expression "scoop install git"
+    }
+
+    ## Neovim
+    if (Test-CommandExists "nvim")
+    {
+        Write-Host "  nvim detected.. skipping.."
+    }
+    else
+    {
+        Write-Host "  installing nvim..."
+        Invoke-Expression "scoop install neovim"
+    }
+
+    ## Yarn
+    if (Test-CommandExists "yarn")
+    {
+        Write-Host "  yarn detected.. skipping.."
+    }
+    else
+    {
+        Write-Host "  installing yarn..."
+        Invoke-Expression "scoop install yarn"
+    }
+
+    ## NodeJS (for Coc nvim plugin)
+    if (Test-CommandExists "node")
+    {
+        Write-Host "  node detected.. skipping.."
+    }
+    else
+    {
+        Write-Host "  installing node..."
+        Invoke-Expression "scoop install nodejs"
+    }
+
+    ## Neovim plug ins
+    Write-Host "  installing nvim plugin manager..."
+    Invoke-Expression "curl -fLo $($env:USERPROFILE)/scoop/apps/neovim/0.8.1/share/nvim/runtime/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+
+    ## Invoke installation of neovim plug-ins (requires init.vim to be present to do much)
+    Write-Host "  installing nvim plugin manager..."
+    Invoke-Expression "nvim -c PlugInstall"
 }
 
 ## Profile Maintanence
