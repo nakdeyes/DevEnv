@@ -164,7 +164,8 @@ function stats
         # individual options that can be turned off/on
         [bool]  $header         = 1,
         [bool]  $workspaceSize  = 0,
-        [bool]  $workspaceCL    = 0
+        [bool]  $workspaceCL    = 0,
+        [bool]  $pendingCLInfo  = 0
     )
 
     ## Check for presets
@@ -172,6 +173,7 @@ function stats
     {
         $workspaceSize  = 1
         $workspaceCL    = 1
+        $pendingCLInfo  = 1
     }
 
     if ($minimal -ne 0)
@@ -193,7 +195,7 @@ function stats
 
     if ($workspaceSize -ne 0)
     {
-        $WorkspaceDirSize = ("{0:N2} GB" -f ((gci -force "$global:P4_WorkspaceRoot" -Recurse -ErrorAction SilentlyContinue| measure Length -s).sum / 1Gb))
+        $WorkspaceDirSize = ("{0:N2} GB" -f ((gci -force "$global:P4_WorkspaceRoot" -Recurse -ErrorAction SilentlyContinue| measure Length -Sum).sum / 1Gb))
         $StatsString += "     workspace size: $($WorkspaceDirSize)`r`n"
     }
 
@@ -201,6 +203,66 @@ function stats
     {
         $WrkspaceCLString = p4cl
         $StatsString += "       workspace CL: $($WrkspaceCLString)`r`n"
+    }
+
+    if ($pendingCLInfo -ne 0)
+    {
+        [string]$DefaultChangesInfoCmd = "p4 opened -c default"
+        [string]$DefaultChangesInfoCmdOutput = Invoke-Expression $DefaultChangesInfoCmd 2>&1
+        
+        $StatsString += "`r`n           --Changelist Stats-- `r`n"
+        $StatsString += "         default CL: "
+        if ($DefaultChangesInfoCmdOutput -eq $null)
+        {
+            $StatsString += "                *Empty!*               "
+        }
+        else
+        {
+            [int]$DefaultEdit   = [regex]::matches($DefaultChangesInfoCmdOutput, "edit default").count
+            [int]$DefaultAdd    = [regex]::matches($DefaultChangesInfoCmdOutput, "add default").count
+            [int]$DefaultRemove = [regex]::matches($DefaultChangesInfoCmdOutput, "delete default").count
+            $StatsString += ("Pending (edit: {0:d3}, add: {1:d3}, del: {2:d3})" -f $DefaultEdit, $DefaultAdd, $DefaultRemove)
+        }
+        $StatsString += "`r`n"
+        
+        [string]$ListChangesCmd = "p4 changes -r -c $($global:P4_WorkspaceClient)"
+        Invoke-Expression $ListChangesCmd | ForEach-Object {
+            [string]$ChangeStr = $_.ToString()
+            [int]$FirstSpaceInd = $ChangeStr.IndexOf(' ')
+            [int]$CLNum = $ChangeStr.Substring($FirstSpaceInd, $ChangeStr.IndexOf(' ', $FirstSpaceInd + 1) - $FirstSpaceInd)
+
+            $StatsString += ("  pending CL {0:d6}: " -f $CLNum)
+
+            [string]$CLChangesInfoCmd = "p4 opened -c $CLNum"
+            [string]$CLChangesInfoCmdOutput = Invoke-Expression $CLChangesInfoCmd 2>&1
+            [int]$CLPendingEdit = [regex]::matches($CLChangesInfoCmdOutput, "edit change").count
+            [int]$CLPendingAdd  = [regex]::matches($CLChangesInfoCmdOutput, "add change").count
+            [int]$CLPendingDel  = [regex]::matches($CLChangesInfoCmdOutput, "delete change").count
+
+            if (($CLPendingEdit -eq 0) -and ($CLPendingAdd -eq 0) -and ($CLPendingDel -eq 0))
+            {
+                $StatsString += "                *Empty!*               "
+            }
+            else
+            {
+                $StatsString += ("Pending (edit: {0:d3}, add: {1:d3}, del: {2:d3})" -f $CLPendingEdit, $CLPendingAdd, $CLPendingDel)
+            }
+
+            [string]$CLSelvedChangesInfoCmd = "p4 describe -s -S $CLNum"
+            [string]$CLSelvedChangesInfoCmdOutput = Invoke-Expression $CLSelvedChangesInfoCmd 2>&1
+
+            [int]$CLShelvedEdit = [regex]::matches($CLSelvedChangesInfoCmdOutput, " edit").count
+            [int]$CLShelvedAdd  = [regex]::matches($CLSelvedChangesInfoCmdOutput, " add").count
+            [int]$CLShelvedDel  = [regex]::matches($CLSelvedChangesInfoCmdOutput, " delete").count
+
+            if (($CLShelvedEdit -gt 0) -or ($CLShelvedAdd -gt 0) -or ($CLShelvedDel -gt 0))
+            {
+                $StatsString += (" - Shelved (edit: {0:d3}, add: {1:d3}, del: {2:d3})" -f $CLShelvedEdit, $CLShelvedAdd, $CLShelvedDel)
+            }
+
+            $StatsString += "`r`n"
+        }
+
     }
 
     ## Print the stats string to the screen
@@ -715,7 +777,7 @@ function p4getworkspacestats
 {
     Param
     (
-        [bool]  $silent = 1
+        [bool]  $verbose = 0
     )
     
     ### Get Client Name
@@ -737,10 +799,10 @@ function p4getworkspacestats
     $global:P4_WorkspaceRoot = $WorkspaceCommandOutput.Substring($DriveNameStringInd, ($ReturnCharStringInd - $DriveNameStringInd))
 
 
-    if ($silent -eq 0)
+    if ($verbose -ne 0)
     {
         echo "  p4 workspace root: $global:P4_WorkspaceRoot"
-        echo "          p4 client: $global:P4_WorkspaceClient"
+        echo "          p4 client: $global:P4_WorkspaceClient" 
     }
 }
 
