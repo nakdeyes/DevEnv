@@ -20,6 +20,9 @@ $global:ProfileConfig = New-Object System.Object
 $global:ProfileConfig | Add-Member -type NoteProperty -name "P4ParallelSyncThreads" -value 12
 
 # Misc App paths
-$global:AppPaths | Add-Member -type NoteProperty -name "VisualStudio" -value "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\devenv.exe"
-
-
+$global:EnvPaths = New-Object System.Object
+$global:EnvPaths | Add-Member -type NoteProperty -name "PowershellEnvGit" -value "D:\dev\git\DevEnv\powershell\ue_dev_env"
+$global:EnvPaths | Add-Member -type NoteProperty -name "Rider" -value "C:\Program Files\JetBrains\JetBrains Rider 2022.3.1\bin\rider64.exe"
+$global:EnvPaths | Add-Member -type NoteProperty -name "TextEditor" -value "nvim"
+$global:EnvPaths | Add-Member -type NoteProperty -name "UnrealGameSync" -value "C:\Program Files (x86)\UnrealGameSync\UnrealGameSyncLauncher.exe"
+$global:EnvPaths | Add-Member -type NoteProperty -name "VisualStudio" -value "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\devenv.exe"
