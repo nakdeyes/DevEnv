@@ -13,6 +13,9 @@ set shiftwidth=2
 set autoindent
 set smartindent
 
+" line numbers
+set number
+
 " Plug ins
 
 call plug#begin()
