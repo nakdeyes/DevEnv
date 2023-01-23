@@ -356,23 +356,38 @@ function env_install_vim()
 ## Profile Maintanence
 function env_script_edit
 {
-    . $AppPaths.TextEditor $script_path
+    . $EnvPaths.TextEditor $script_path
 }
 
 function env_config_edit
 {
-    . $AppPaths.TextEditor $script_config_path
+    . $EnvPaths.TextEditor $script_config_path
 }
 
 function env_omp_edit
 {
-    . $AppPaths.TextEditor $omp_theme_path
+    . $EnvPaths.TextEditor $omp_theme_path
 }
 
 function env_script_reload
 {
-    echo ". $script_path"
-    . $script_path
+    echo ". $PROFILE"
+    . $PROFILE
+}
+
+function env_script_git_pull
+{
+    [string]$script_dir = $script_path.Substring(0, $script_path.LastIndexOf('\'))
+    [string]$Cmd = "cp $($EnvPaths.PowershellEnvGit)\ue_dev_env.ps1 $script_dir"
+    Write-Output " copy git script to local folder.. command: $Cmd"
+    Invoke-Expression $Cmd
+}
+
+function env_script_git_push
+{
+    [string]$Cmd = "cp $script_path $($EnvPaths.PowershellEnvGit)"
+    Write-Output " copy local script to git folder.. command: $Cmd"
+    Invoke-Expression $Cmd
 }
 
 ## UE stuff - Building
@@ -646,12 +661,12 @@ function package_server
 ## UE Stuff - launching
 function vs
 {
-    . $AppPaths.VisualStudio $UE_VSSolution
+    . $EnvPaths.VisualStudio $UE_VSSolution
 }
 
 function rider
 {
-    . $AppPaths.Rider $UE_VSSolution
+    . $EnvPaths.Rider $UE_VSSolution
 }
 
 function ueInsights
@@ -680,7 +695,7 @@ function ueCommandlet
 # Open Unreal Game Sync, should open from project directory to pick up P4 Config stuff
 function ugs
 {
-    . $AppPaths.UnrealGameSync
+    . $EnvPaths.UnrealGameSync
 }
 
 ## Perforce stuff
