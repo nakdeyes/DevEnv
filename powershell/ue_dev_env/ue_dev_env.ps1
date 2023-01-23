@@ -649,6 +649,11 @@ function vs
     . $AppPaths.VisualStudio $UE_VSSolution
 }
 
+function rider
+{
+    . $AppPaths.Rider $UE_VSSolution
+}
+
 function ueInsights
 {
     . $UE_Insights
