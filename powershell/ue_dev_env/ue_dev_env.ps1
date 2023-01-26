@@ -98,6 +98,7 @@ function dev
         "a" { $global:CurrentWorkspace = $WorkspaceA }
         "b" { $global:CurrentWorkspace = $WorkspaceB }
         "c" { $global:CurrentWorkspace = $WorkspaceC }
+        "d" { $global:CurrentWorkspace = $WorkspaceD }
         default { Write-Host "**Called Dev with unimplemented workspace ID"; return; }
     }
 
@@ -312,13 +313,13 @@ function Test-CommandExists
 
 function env_install_prereqs()
 {
-    # run as admin
-    if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))  
-    {  
-        $arguments = "& '" +$myinvocation.mycommand.definition + "'"
-        Start-Process powershell -Verb runAs -ArgumentList $arguments
-        Break
-    }
+    # # run as admin
+    # if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))  
+    # {  
+    #     $arguments = "& '" +$myinvocation.mycommand.definition + "'"
+    #     Start-Process powershell -Verb runAs -ArgumentList $arguments
+    #     Break
+    # }
 
     Write-Host " **** Installing Prereq - OhMyPosh **** "
     winget install JanDeDobbeleer.OhMyPosh
@@ -929,8 +930,11 @@ function p4BulkChangefiletype
         # The new file type
         [string]$new_filetype = "binary+l",
 
-        # Flag to check for if a file is shelved on any workspaces.
-        [int]$check_shelved = 1,
+        # Spew shelved changes if enabled
+        [int]$spew_shelved = 0,
+
+        # Spew checked out files if enabled
+        [int]$spew_checked_out = 0,
 
         # Flag to actually request the file type change (else will just print)
         [int]$do_filetype_change = 0,
@@ -946,6 +950,8 @@ function p4BulkChangefiletype
     [int]$filecounter = 0
     [int]$correct_filetype_counter = 0
     [int]$successful_edit_counter = 0
+    [int]$shelved_file_counter = 0
+    [int]$checked_out_file_counter = 0
 
     [string]$P4Command = "p4 files -e $($p4Path)"
 
@@ -969,17 +975,17 @@ function p4BulkChangefiletype
         Write-Output ""
         Write-Output "      **      --- not changing files.. run with '-do_filetype_change:1' to change file type! ---"
     }
-
-    if ($check_shelved)
-    {
-         Write-Output ""
-         Write-Output "     **       --- CHECKING FOR SHELVED FILES ---"
-    }
     
+    if ($spew_shelved)
+    {
+        Write-Output ""
+        Write-Output "      **      --- spew Shelved ENABLED ---"
+    }
+
     if ($verbose)
     {
         Write-Output ""
-        Write-Output "      **      ---verbose ENABLED---"
+        Write-Output "      **      --- verbose ENABLED ---"
     }
     Write-Output ""
     Write-Output ""
@@ -1000,10 +1006,47 @@ function p4BulkChangefiletype
         {
             $correct_filetype_counter = $correct_filetype_counter + 1
 
+            if ($spew_shelved)
+            {
+                [string]$p4ShelvedChangesCommand = "p4 changes -s shelved $($fileNameString)"
+                [string]$shelved_output = Invoke-Expression $p4ShelvedChangesCommand
+
+                [bool]$any_shelved = ($shelved_output.IndexOf("Change") -ge 0)
+
+                if ($any_shelved)
+                {
+                    $shelved_file_counter = $shelved_file_counter + 1
+                }
+
+                if ($any_shelved -or $verbose)
+                {
+                    Write-Output "    SHELVED CHANGES FOUND: $($any_shelved) - Total Files: $($shelved_file_counter) - File: $($fileNameString)"
+                }
+            }
+
+            if ($spew_checked_out)
+            {
+                [string]$p4CheckedOutChangesCommand = "p4 changes -s pending $($fileNameString)"
+                [string]$p4CmdOutput = Invoke-Expression $p4CheckedOutChangesCommand
+
+                [bool]$any_checked_out = ($p4CmdOutput.IndexOf("Change") -ge 0)
+
+                if ($any_checked_out)
+                {
+                    $checked_out_file_counter = $checked_out_file_counter + 1
+                }
+
+                #if ($any_checked_out -or $verbose)
+                #{
+                    Write-Output "     CHECKED OUT CHANGES FOUND: $($any_checked_out) - Total Files: $($checked_out_file_counter) - File: $($fileNameString)"
+                    Write-Output "         checked out, output: $($p4CmdOutput)"
+                #}
+            }
+
             if ($do_filetype_change)
             {
-                [string]$p4EditCommand = "p4 edit -t $($new_filetype) $($fileNameString)"
-                [string]$editCmdOutput = Invoke-Expression $p4EditCommand
+                [string]$p4EditCommand = "p4 edit -t $($new_filetype) '$($fileNameString)'"
+                [string]$editCmdOutput = Invoke-Expression $p4EditCommand 2>&1
                 [bool]$commandSucceeded = ($editCmdOutput.IndexOf("opened for edit") -ge 0)
                 
                 if ($commandSucceeded)
@@ -1011,11 +1054,16 @@ function p4BulkChangefiletype
                     $successful_edit_counter = $successful_edit_counter + 1
                 }
                 
+                #if ($verbose -or ($editCmdOutput -eq "") -or !$commandSucceeded)
                 if ($verbose)
                 {
                     Write-Output "    doing edit cmd: '$($p4EditCommand)'"
                     Write-Output "   edit cmd output: $($editCmdOutput)"
                     Write-Output "      edit success: $($commandSucceeded)"
+                }
+                elseif (!$commandSucceeded -or ($editCmdOutput -eq ""))
+                {
+                    Write-Output "     check out failed.. output: $($editCmdOutput)"
                 }
             }
         }
@@ -1031,6 +1079,11 @@ function p4BulkChangefiletype
     Write-Output "    FINISHED"
     Write-Output ""
     Write-Output "   Found $($filecounter) files. Of those files, $($correct_filetype_counter) of those files matched file type filter '$($filetype_match_pattern)'"
+    if ($spew_shelved)
+    {
+        Write-Output ""
+        Write-Output "              Shelved file check.. has shelved changes: $($shelved_file_counter) / $($correct_filetype_counter)"
+    }
     Write-Output ""
     Write-Output "             Successful attempted file edits: $($successful_edit_counter) / $($correct_filetype_counter)"
     Write-Output ""
