@@ -12,8 +12,13 @@ $global:WorkspaceB | Add-Member -type NoteProperty -name "EnginePath" -value "D:
 
 # Workspace C
 $global:WorkspaceC = New-Object System.Object
-$global:WorkspaceC | Add-Member -type NoteProperty -name "ProjectPath" -value "D:\dev\p4\lg_p4\depot\UnrealEngine\Descent\Descent.uproject"
-$global:WorkspaceC | Add-Member -type NoteProperty -name "EnginePath" -value "D:\dev\p4\lg_p4\depot\UnrealEngine"
+$global:WorkspaceC | Add-Member -type NoteProperty -name "ProjectPath" -value "D:\dev\ue\LyraStarterGame\LyraStarterGame.uproject"
+$global:WorkspaceC | Add-Member -type NoteProperty -name "EnginePath" -value "D:\dev\ue\UE_5.0"
+
+# Workspace D
+$global:WorkspaceD = New-Object System.Object
+$global:WorkspaceD | Add-Member -type NoteProperty -name "ProjectPath" -value "D:\dev\ue\LyraStarterGame\LyraStarterGame.uproject"
+$global:WorkspaceD | Add-Member -type NoteProperty -name "EnginePath" -value "D:\dev\ue\UE_5.0"
 
 # Global Config values
 $global:ProfileConfig = New-Object System.Object
