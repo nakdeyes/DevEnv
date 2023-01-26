@@ -525,6 +525,18 @@ function buildShaderCompilerWorker
     $env:LASTEXITCODE = $global:LASTEXITCODE
 }
 
+{
+    $BuildCommand = ". $UE_BuildScript UnrealInsights Win64 Development"
+
+    Microsoft.PowerShell.Utility\Write-Host "    BUILD: " -NoNewLine -ForegroundColor "DarkCyan"
+    Microsoft.PowerShell.Utility\Write-Host "$BuildSpecID - $BuildConfigID" -ForegroundColor "Cyan"
+    Microsoft.PowerShell.Utility\Write-Host "  command: " -NoNewLine -ForegroundColor "DarkCyan"
+    Microsoft.PowerShell.Utility\Write-Host "'$BuildCommand'" -ForegroundColor "Cyan"
+
+    Invoke-Expression -Command $BuildCommand
+    $env:LASTEXITCODE = $global:LASTEXITCODE
+}
+
 function cook
 {
     Param
@@ -913,6 +925,9 @@ function p4BulkChangefiletype
         # The new file type
         [string]$new_filetype = "binary+l",
 
+        # Flag to check for if a file is shelved on any workspaces.
+        [int]$check_shelved = 1,
+
         # Flag to actually request the file type change (else will just print)
         [int]$do_filetype_change = 0,
 
@@ -949,6 +964,12 @@ function p4BulkChangefiletype
     {
         Write-Output ""
         Write-Output "      **      --- not changing files.. run with '-do_filetype_change:1' to change file type! ---"
+    }
+
+    if ($check_shelved)
+    {
+         Write-Output ""
+         Write-Output "     **       --- CHECKING FOR SHELVED FILES ---"
     }
     
     if ($verbose)
