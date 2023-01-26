@@ -525,6 +525,7 @@ function buildShaderCompilerWorker
     $env:LASTEXITCODE = $global:LASTEXITCODE
 }
 
+function buildUEInsights
 {
     $BuildCommand = ". $UE_BuildScript UnrealInsights Win64 Development"
 
