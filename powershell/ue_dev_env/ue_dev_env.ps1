@@ -189,7 +189,7 @@ function stats
     {
         $StatsString +=  "           --Workspace Stats-- `r`n"
     }
-    $StatsString += "        workspace $($env:WRKSPACE_LETTER): $global:P4_WorkspaceClient - $global:P4_WorkspaceRoot`r`n"
+    $StatsString += "        workspace $($env:WRKSPACE_LETTER): $global:P4_WorkspaceClient (stream: $global:P4_WorkspaceStream) - $global:P4_WorkspaceRoot`r`n"
     $StatsString += "            project: $($CurrentWorkspace.ProjectPath)`r`n"
     $StatsString += "         engine dir: $($CurrentWorkspace.EnginePath)`r`n"
 
@@ -811,6 +811,9 @@ function p4getworkspacestats
     $ReturnCharStringInd = $WorkspaceCommandOutput.IndexOf("\...", $DriveNameStringInd)
     $global:P4_WorkspaceRoot = $WorkspaceCommandOutput.Substring($DriveNameStringInd, ($ReturnCharStringInd - $DriveNameStringInd))
 
+    ### Get workspace stream
+    $global:P4_WorkspaceStream = p4 -F "%Stream%" -ztag client -o | Out-String
+    $global:P4_WorkspaceStream = $global:P4_WorkspaceStream.Substring(0,$global:P4_WorkspaceStream.Length - 2) ## Cut trailing return char
 
     if ($verbose -ne 0)
     {
