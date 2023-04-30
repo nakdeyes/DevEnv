@@ -1339,6 +1339,22 @@ function PS5Deploy
     Pop-Location
 }
 
+## Accelbyte stuff
+function ABCLI
+{
+    Param
+    (
+        [int]$buildNum = 0
+    )
+
+    # Need to run the script out of it's own directory
+    $script_dir = "$global:P4_WorkspaceRoot\Tools\Bin\AccelByteTools"
+    Write-Host "ABCLI - run cmd: 'createOnDemandServer -r 1p -i $buildNum' ... "
+    Push-Location $script_dir
+    Start-Process powershell .\launch.bat
+    Pop-Location
+}
+
 ## Windows stuff
 # Open explorer in the current directory
 function ex
