@@ -784,7 +784,13 @@ function p4cl
 
 function p4clean
 {
-    p4 clean -ade -I
+    $Command = "p4 clean -ade -I"
+
+    Microsoft.PowerShell.Utility\Write-Host " p4clean - command: " -NoNewLine -ForegroundColor "DarkCyan"
+    Microsoft.PowerShell.Utility\Write-Host "'$Command'" -ForegroundColor "Cyan"
+
+    Invoke-Expression -Command $Command
+    $env:LASTEXITCODE = $global:LASTEXITCODE
 }
 
 function p4getworkspacestats
@@ -1322,10 +1328,14 @@ function PS5Deploy
     )
 
     # Need to run the script out of it's own directory
-    $script_dir = "$global:P4_WorkspaceRoot\Tools\Bin\WorkflowTools\Propper"
+    [string] $script_dir = "$global:P4_WorkspaceRoot\Tools\Bin\WorkflowTools\Propper\PS5DeployTool"
     Write-Host "Deploy PS5 build # $buildNum ... "
     Push-Location $script_dir
-    .\install_ps5_build.cmd $buildNum
+    ## .\PS5DeployTool.bat -downloadPath=D:\PS5Builds
+    [string] $ExeCommand = "./PS5DeployTool.ps1 -nexusServer https://nexus.firewalkstudios.com -downloadPath D:\PS5Builds -targetedBuild $buildNum"
+    Write-Output "Executing command: '$ExeCommand'"
+    Invoke-Expression $($ExeCommand)
+    ## Start-Process powershell -Verb runAs -ArgumentList $("" + $ExeCommand)
     Pop-Location
 }
 
