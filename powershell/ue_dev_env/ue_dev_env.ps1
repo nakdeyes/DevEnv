@@ -820,7 +820,11 @@ function p4getworkspacestats
 
     ### Get workspace stream
     $global:P4_WorkspaceStream = p4 -F "%Stream%" -ztag client -o | Out-String
-    $global:P4_WorkspaceStream = $global:P4_WorkspaceStream.Substring(0,$global:P4_WorkspaceStream.Length - 2) ## Cut trailing return char
+    if ($global:P4_WorkspaceStream.Length -gt 3)
+    {
+        $global:P4_WorkspaceStream = $global:P4_WorkspaceStream.Substring(0,$global:P4_WorkspaceStream.Length - 2) ## Cut trailing return char
+    }
+    
 
     if ($verbose -ne 0)
     {
