@@ -618,8 +618,14 @@ function run
 
     switch ($BuildSpecID)
     {   
-        "Client" { 
-            $ConfigRunCommand = "$($UE_ProjectName).exe $($map)"
+        "Client" {
+            $ClientExeName = "$($UE_ProjectName).exe"
+            if (![System.IO.File]::Exists("$($UE_ProjectDirectory)\Binaries\Win64\$($ClientExeName)"))
+            {
+                $ClientExeName = "$($UE_ProjectName)Client.exe"
+            }
+
+            $ConfigRunCommand = "$($ClientExeName) $($map)"
             
             if ($clientConnect -eq 1)
             {
