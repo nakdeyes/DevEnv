@@ -311,6 +311,28 @@ function Test-CommandExists
     Finally {$ErrorActionPreference=$oldPreference}
 } #end function test-CommandExists
 
+function FindFirstExistingFileAtPath
+{
+    Param
+    (
+        [string[]]$FilePrefixes,
+        [string]$FilePostfix = "",
+        [string]$Path
+    )
+
+    $FoundPrefix = "*none_found*"
+    Foreach($FilePrefix in $FilePrefixes)
+    {
+         ## Write-Host " Does file '$($Path)\$($FilePrefix)$($FilePostfix)' exist: $([System.IO.File]::Exists("$($Path)\$($FilePrefix)$($FilePostfix)"))"
+         if ([System.IO.File]::Exists("$($Path)\$($FilePrefix)$($FilePostfix)"))
+         {
+               $FoundPrefix = $FilePrefix
+         }
+    }
+
+    return $FoundPrefix
+}
+
 function env_install_prereqs()
 {
     # # run as admin
@@ -495,7 +517,7 @@ function build
     $BuildProjectName = ""
     switch ($BuildSpecID)
     {
-        "Client" { $BuildProjectName = $UE_ProjectName }
+        "Client" { $BuildProjectName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)", "$($UE_ProjectName)Client") -FilePostfix:".Target.cs" -Path:"$($UE_ProjectDirectory)\Source" }
         "Editor" { $BuildProjectName = "$($UE_ProjectName)Editor" }
         "Server" { $BuildProjectName = "$($UE_ProjectName)Server" }
         default { Write-Host "**HOW DID YOU GET HERE?!"; return; }
@@ -625,7 +647,9 @@ function run
                 $ClientExeName = "$($UE_ProjectName)Client.exe"
             }
 
-            $ConfigRunCommand = "$($ClientExeName) $($map)"
+            $ClientExeName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)", "$($UE_ProjectName)Client") -FilePostfix:".exe" -Path:"$($UE_ProjectDirectory)\Binaries\Win64"
+
+            $ConfigRunCommand = "$($ClientExeName).exe $($map)"
             
             if ($clientConnect -eq 1)
             {
