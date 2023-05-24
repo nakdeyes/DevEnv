@@ -697,7 +697,7 @@ function package
     Param
     (
         [string]$spec           = "cli",
-        [string]$config         = "dev",
+        [string]$config         = "test",
         [string]$platform       = "win64",
         [string]$archivePath    = "",
         [bool]  $iterativeCook  = 1
@@ -716,11 +716,6 @@ function package
         Write-Host " !!! Package given a spec it does not understand ('$spec'). Doing Nothing! Please select 'client', 'server' or some other supported build spec."
         return
     }
-    if ($SpecID -ieq "Editor")
-    {
-        Write-Host " !!! Packing for the editor as a spec is not really supported. Try 'client' or 'server' "
-        return
-    }
 
     $PlatformID = Get-ID-From-Alias $BuildPlatforms $platform
     if ($SpecID -ieq $ERR)
@@ -735,8 +730,25 @@ function package
         $ConfigSpecificArgs = $ConfigSpecificArgs + " -iterativecooking"
     }
 
+    switch ($SpecID)
+    {   
+        "Client" {
+            $PackageCommand = ". $UE_UAT BuildCookRun -project='$($CurrentWorkspace.ProjectPath)' -noP4 -unattended -build -platform='$($PlatformID)' -clientconfig=$($ConfigID) -nocompileeditor -cook -cookflavor=multi $ConfigSpecificArgs -stage -pak -package -archive -archivedirectory='$($archivePath)'"
+        }
+        "Server" { 
+          $PackageCommand = ". $UE_UAT BuildCookRun -project='$($CurrentWorkspace.ProjectPath)' -noP4 -unattended -build -noclient -server -serverplatform='$($PlatformID)' -serverconfig=$($ConfigID) -nocompileeditor -cook -cookflavor=multi $ConfigSpecificArgs -stage -pak -package -archive -archivedirectory='$($archivePath)'"
+        }
+        "Editor" {
+            Write-Host " !!! Packaging for the editor as a spec is not really supported. Try 'client' or 'server' "
+            return
+        }
+        default { Write-Host "**HOW DID YOU GET HERE?!"; return; }
+    }
+
+    ## TODO: Robust cooking for all platforms / winserver / linux server et. 
+
     ##WINDOW_SPEW_CMND_EXE=$(printf "%q/RunUAT.bat BuildCookRun -project=\"%s\" -noP4 -unattended -build -platform=\"XSX\" -clientconfig=\"Development\" -nocompileeditor -cook -cookflavor=multi -stage -pak -package -deploy -archive -archivedirectory=\"%s\"" "$UEBUILDSCRIPTSPATH" "$WIN_UE_PROJ_PATH" "$WIN_BuildDirName")
-    $PackageCommand = ". $UE_UAT BuildCookRun -project='$($CurrentWorkspace.ProjectPath)' -noP4 -unattended -build -platform='$($PlatformID)' -clientconfig=$($ConfigID) -nocompileeditor -cook -cookflavor=multi $ConfigSpecificArgs -stage -pak -package -archive -archivedirectory='$($archivePath)'"
+    
 
     Microsoft.PowerShell.Utility\Write-Host "      package: " -NoNewLine -ForegroundColor "DarkCyan"
     Microsoft.PowerShell.Utility\Write-Host "$PlatformID - $SpecID - $ConfigID -> $archivePath" -ForegroundColor "Cyan"
