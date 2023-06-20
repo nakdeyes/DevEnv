@@ -475,6 +475,55 @@ function env_script_git_push
     Invoke-Expression $Cmd
 }
 
+function env_script_list
+{
+    # list all functions in the script, with optional search substring
+    Param
+    (
+        [string] $search_string = "",
+        [bool]   $alpha_sort    = 1
+    )
+
+    $do_search_string = ($search_string -ne "")
+    $found_funcs = [System.Collections.ArrayList]@()
+    Select-String -Path $script_path -Pattern 'function ' -Raw | ForEach-Object {
+      $firstword = $_.Substring(0, 9)
+      if ($firstword -eq "function ")
+      {
+          $functionname = $_.Substring(9, $_.Length - 9)
+          $firstspacepostfunctionname = $functionname.IndexOf(' ')
+          if ($firstspacepostfunctionname -ne -1)
+          {
+              $functionname = $functionname.Substring(0, $firstspacepostfunctionname)
+          }
+
+          if ($do_search_string -ne 0)
+          {
+              if ($functionname.IndexOf($search_string) -ne -1)
+              {
+                  $null = $found_funcs.Add($functionname)
+              }
+          }
+          else
+          {
+              $null = $found_funcs.Add($functionname)
+          }
+      }
+    }
+    
+    if ($alpha_sort -ne 0)
+    {
+        $found_funcs = $found_funcs | sort
+    }
+
+    $function_count = $found_funcs.Count
+    Write-Host " Found $($found_funcs.Count) functions:"
+    foreach ($functionname in $found_funcs)
+    {
+        Write-Host "  $($functionname)"
+    }
+}
+
 ## UE stuff - Building
 function vs_gen 
 {
