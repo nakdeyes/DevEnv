@@ -524,6 +524,28 @@ function env_script_list
     }
 }
 
+# attempt to open env script in vim and jump to that line.
+function env_func
+{
+    Param
+    (
+        [string]$func = "dev"
+    )
+    # First find the line of 'function *func_name*' in the env_script
+    [string]$func_search_string = "function $($func)"
+    $foundString = Get-Content $script_path | select-string $func_search_string
+    [int]$lineNum = $foundString.LineNumber
+    if ($lineNum -ne 0)
+    {
+        # Write-Output "env func.. looking for func '$($func)' .. found on line $($lineNum)"
+        . $EnvPaths.TextEditor +$($lineNum) $script_path
+    }
+    else
+    {
+        Write-Output " **** Unabled to find function named '$($func)' in file $($script_path)"
+    }
+}
+
 ## UE stuff - Building
 function vs_gen 
 {
