@@ -13,13 +13,24 @@
 
 # Useful fonts and powershell tips - https://www.hanselman.com/blog/my-ultimate-powershell-prompt-with-oh-my-posh-and-the-windows-terminal
 
-# Save off this script and the user profile config path
-$script_path            = "$PSScriptRoot\ue_dev_env.ps1"
-$script_config_path     = "$PSScriptRoot\ue_dev_env_config.ps1"
-$omp_theme_path         = "$PSScriptRoot\ue_dev_env.omp.json"
+## Default Script root if none supplied externally: $PsScriptRoot
+if (-not $DevEnvPsScriptRoot) 
+{
+     $DevEnvPsScriptRoot = $PSScriptRoot 
+}
 
+# Save off this script and the user profile config path
+$script_path            = "$DevEnvPsScriptRoot\ue_dev_env.ps1"
+$omp_theme_path         = "$DevEnvPsScriptRoot\ue_dev_env.omp.json"
+
+## Default script config if none supplied externally: "$DevEnvPsScriptRoot\ue_dev_env_config.ps1"
+if (-not $DevEnvConfigPath) 
+{
+     $DevEnvConfigPath = "$DevEnvPsScriptRoot\ue_dev_env_config.ps1"
+}
 ## Load in config
-. "$script_config_path"
+Write-Output "Loading config: '$DevEnvConfigPath'"
+. $DevEnvConfigPath
 
 ## Oh my posh terminal stuff - https://ohmyposh.dev/docs/
 # NOTE: For use with CMDER, you must remove a function prompt read only flag in vendor\profile.ps1. - Details here: https://github.com/lukesampson/pshazz/issues/100
@@ -349,10 +360,10 @@ function env_install_prereqs()
     Install-Module -Name Terminal-Icons -Repository PSGallery -Scope CurrentUser
     Write-Host " **** Installing Prereq - CascadiaCode fonts **** "
 
-    $TempZipDir = "$PSScriptRoot\assets\temp"
+    $TempZipDir = "$DevEnvPsScriptRoot\assets\temp"
     echo "temp zip dir: $TempZipDir"
     Get-ChildItem -Path "$TempZipDir" -Recurse | Remove-Item -force -recurse
-    Expand-Archive "$PSScriptRoot\assets\CascadiaCode.zip" -DestinationPath "$TempZipDir"
+    Expand-Archive "$DevEnvPsScriptRoot\assets\CascadiaCode.zip" -DestinationPath "$TempZipDir"
     sleep 2
     Push-Location "$TempZipDir"
     $fonts = (New-Object -ComObject Shell.Application).Namespace(0x14)
@@ -431,7 +442,7 @@ function env_install_vim()
 
     ## Neovim plug ins
     Write-Host "  installing nvim plugin manager..."
-    Invoke-Expression "curl -fLo $($env:USERPROFILE)/scoop/apps/neovim/0.8.1/share/nvim/runtime/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+    Invoke-Expression "curl -fLo $($env:USERPROFILE)/scoop/apps/neovim/0.9.1/share/nvim/runtime/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
 
     ## Invoke installation of neovim plug-ins (requires init.vim to be present to do much)
     Write-Host "  installing nvim plugin manager..."
@@ -446,7 +457,7 @@ function env_script_edit
 
 function env_config_edit
 {
-    . $EnvPaths.TextEditor $script_config_path
+    . $EnvPaths.TextEditor $DevEnvConfigPath
 }
 
 function env_omp_edit
