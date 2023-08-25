@@ -382,7 +382,8 @@ function env_install_vim()
     else
     {
         Write-Host "  installing scoop..."
-        Invoke-Expression "iwr -useb get.scoop.sh | iex"
+        irm get.scoop.sh -outfile 'install.ps1'
+        iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
     }
 
     ## git
