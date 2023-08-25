@@ -20,8 +20,9 @@ if (-not $DevEnvPsScriptRoot)
 }
 
 # Save off this script and the user profile config path
-$script_path            = "$DevEnvPsScriptRoot\ue_dev_env.ps1"
-$omp_theme_path         = "$DevEnvPsScriptRoot\ue_dev_env.omp.json"
+$script_path                = "$DevEnvPsScriptRoot\ue_dev_env.ps1"
+$omp_theme_path             = "$DevEnvPsScriptRoot\ue_dev_env.omp.json"
+$command_window_log_path    = "$HOME\Documents\PowerShell\dev_env_output.log"
 
 ## Default script config if none supplied externally: "$DevEnvPsScriptRoot\ue_dev_env_config.ps1"
 if (-not $DevEnvConfigPath) 
@@ -1578,14 +1579,14 @@ function TestOutput
 {
     Param
     (
-        [int]   $numLines   = 6,
+        [int]   $numLines   = 15,
         [string]$linetext   = "Debug Line "
     )
     
     for ( $i = 0; $i -lt $numLines; $i++)
     {
         Write-Output "$linetext $i / $numLines"
-        sleep 1
+        Start-Sleep -Milliseconds 500
     }
 }
 
@@ -1593,56 +1594,51 @@ function Invoke-Expression-Window
 {
     Param
     (
-        [string]$command    = ". TestOutput"
+        [string]$expression    = ". TestOutput"
     )
 
-    $global:IEW_COM = $command
-    #(Invoke-Expression -Command $command | select @{n='WithText';e={$_ + " 12345"}}).WithText
+    $longRunningCommand = $expression  
+    $LogFilePath = $command_window_log_path
 
-    #(Invoke-Expression -Command $command) | % { "My string $($_) my string2" }
+    Write-Host "Log file path: '$LogFilePath'"
 
-    #Invoke-Expression $command | Out-Null
+# Define the tasks
+$executeTask = {
+    param ($command, $logFilePath)
+    & $command *>&1 | Out-File $logFilePath
+    # Execute other commands
+}
 
-
-    ## Works, but waits until execution finish before processing. 
-    # $inputLineNum = 1
-    # (Invoke-Expression -Command $command) | % {
-    #    Write-Host "$inputLineNum`: $_"
-    #    $inputLineNum++
-    # }
-
-    # Write-Host "About to create process.."
-    # $myprocss = Start-Process "$command" -PassThru 
-    # Write-Host "Process created.. waiting for exit.. "
-    # $myprocss.WaitForExit()
-    # Write-Host "Done!"
-    
-
-    #Start-Process Invoke-Expression ("$command 10")
-    #Start-Process Invoke-Expression ("$global:IEW_COM 10")
-    #Start-Process powershell {Invoke-Expression ("$command 10")}
-    #Start-Process powershell {Invoke-Expression ("$global:IEW_COM 10")}
-    #Start-Process powershell -ArgumentList "-noexit -command `"$global:IEW_COM 10`""
-    #Invoke-Command -ScriptBlock { $("$global:IEW_COM 10") } -JobName WinRM -ThrottleLimit 16 -AsJob
-
-    #$cmd_job = Start-Job -Name PShellJob -ScriptBlock { $("Invoke-Expression $global:IEW_COM 10") }
-    #$cmd_job = Start-Job -Name PShellJob -ScriptBlock { PowerShell } -ArgumentList $("$global:IEW_COM 10")
-    $FOO = {$global:IEW_COM}
-    $cmd_job = Start-Job -ScriptBlock {${Function:$FOO}} -ArgumentList 10
-    $job_time = 0
-    $job_total_time = 150
-    $job_completed = 0
-    while (!$job_completed -and ($job_time -lt $job_total_time))
-    {
-        #cls
-        $cmd_job | Select-Object -Property *
-
-        $job_completed = ($cmd_job.JobStateInfo -eq "Completed")
-        sleep 0.5
-        $job_time++
+$monitorTask = {
+    param ($logFilePath)
+    while ($true) {
+        $lastLines = Get-Content $logFilePath -Tail 10
+        Write-Host ("Last 10 lines:`n$($lastLines -join "`n")")
+        Start-Sleep -Milliseconds 500
     }
+}
 
+# Create a runspace pool
+$runspacePool = [runspacefactory]::CreateRunspacePool(1, [Environment]::ProcessorCount)
+$runspacePool.Open()
 
-    #Invoke-Expression 'cmd /c start powershell -Command { Invoke-Expression ("$global:IEW_COM 10") }'
-    Invoke-Expression $("$global:IEW_COM 20")
+# Start the execute task
+$executeRunspace = [powershell]::Create().AddScript($executeTask).AddArgument($longRunningCommand).AddArgument($LogFilePath)
+$executeRunspace.RunspacePool = $runspacePool
+$executeRunspace.BeginInvoke()
+
+# Start the monitor task
+$monitorRunspace = [powershell]::Create().AddScript($monitorTask).AddArgument($LogFilePath)
+$monitorRunspace.RunspacePool = $runspacePool
+$monitorRunspace.BeginInvoke()
+
+# Wait for user input to exit
+Write-Host "Press Enter to exit..."
+$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyUp")
+
+# Clean up
+$executeRunspace.Dispose()
+$monitorRunspace.Dispose()
+$runspacePool.Close()
+$runspacePool.Dispose()
 }
