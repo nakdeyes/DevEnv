@@ -30,7 +30,7 @@ if (-not $DevEnvConfigPath)
      $DevEnvConfigPath = "$DevEnvPsScriptRoot\ue_dev_env_config.ps1"
 }
 ## Load in config
-Write-Output "Loading config: '$DevEnvConfigPath'"
+## Write-Output "Loading config: '$DevEnvConfigPath'"
 . $DevEnvConfigPath
 
 ## Oh my posh terminal stuff - https://ohmyposh.dev/docs/
@@ -339,6 +339,7 @@ function FindFirstExistingFileAtPath
          if ([System.IO.File]::Exists("$($Path)\$($FilePrefix)$($FilePostfix)"))
          {
                $FoundPrefix = $FilePrefix
+               return $FoundPrefix
          }
     }
 
@@ -583,6 +584,8 @@ function build
         [string]$buildConfig    = "dev"
     )
 
+    ## TODO: Multi platform support!
+
     $BuildConfigID = Get-ID-From-Alias $BuildConfigs $buildConfig
     if ($BuildConfigID -ieq $ERR)
     {
@@ -709,6 +712,8 @@ function run
         [bool]$log              = 1
     )
 
+    ## TODO: Multi platform support? 
+
     $BuildConfigID = Get-ID-From-Alias $BuildConfigs $buildConfig
     if ($BuildConfigID -ieq $ERR)
     {
@@ -725,13 +730,7 @@ function run
     switch ($BuildSpecID)
     {   
         "Client" {
-            $ClientExeName = "$($UE_ProjectName).exe"
-            if (![System.IO.File]::Exists("$($UE_ProjectDirectory)\Binaries\Win64\$($ClientExeName)"))
-            {
-                $ClientExeName = "$($UE_ProjectName)Client.exe"
-            }
-
-            $ClientExeName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)", "$($UE_ProjectName)Client") -FilePostfix:".exe" -Path:"$($UE_ProjectDirectory)\Binaries\Win64"
+            $ClientExeName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)-Win64-$($BuildConfigID)", "$($UE_ProjectName)", "$($UE_ProjectName)Client") -FilePostfix:".exe" -Path:"$($UE_ProjectDirectory)\Binaries\Win64"
 
             $ConfigRunCommand = "$($ClientExeName).exe $($map)"
             
@@ -741,7 +740,10 @@ function run
             }
             $ConfigRunCommand = $ConfigRunCommand + " -WINDOWED -ResX=1280 -ResY=720 -WinX=0 -WinY=30"
         }
-        "Server" { $ConfigRunCommand = "$($UE_ProjectName)Server.exe" }
+        "Server" {
+            $ServerExeName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)Server-Win64-$($BuildConfigID)", "$($UE_ProjectName)Server-$($BuildConfigID)", "$($UE_ProjectName)Server") -FilePostfix:".exe" -Path:"$($UE_ProjectDirectory)\Binaries\Win64"
+            $ConfigRunCommand = "$($ServerExeName).exe" 
+        }
         "Editor" {
 
             $ConfigRunCommand = "UnrealEditor.exe"
