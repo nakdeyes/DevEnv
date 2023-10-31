@@ -564,11 +564,12 @@ function env_func
 function vs_gen 
 {
     # Just use GenerateProjectFiles.bat
-    # $GenProjBat = "$($CurrentWorkspace.EnginePath)\Engine\Build\BatchFiles\GenerateProjectFiles.bat"
-    # $GenerateCommand = ". $($GenProjBat) $($CurrentWorkspace.ProjectPath) -rocket -progress"
+    $GenProjBat = "$($CurrentWorkspace.EnginePath)\GenerateProjectFiles.bat"
+    $GenerateCommand = ". $($GenProjBat)"
+    #$GenerateCommand = ". $($GenProjBat) $($CurrentWorkspace.ProjectPath) -rocket -progress"
 
     # Generate commands with Unreal Build Tool. Works great, but not if it isn't compiled yet :D
-    $GenerateCommand = ". $global:UE_BuildTool -projectfiles -project=$($CurrentWorkspace.ProjectPath) -game -engine -rocket -progress"
+    # $GenerateCommand = ". $global:UE_BuildTool -projectfiles -project=$($CurrentWorkspace.ProjectPath) -game -engine -rocket -progress"
 
     echo " generate project files command: $GenerateCommand"
     Invoke-Expression $GenerateCommand
@@ -742,7 +743,7 @@ function run
         }
         "Server" {
             $ServerExeName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)Server-Win64-$($BuildConfigID)", "$($UE_ProjectName)Server-$($BuildConfigID)", "$($UE_ProjectName)Server") -FilePostfix:".exe" -Path:"$($UE_ProjectDirectory)\Binaries\Win64"
-            $ConfigRunCommand = "$($ServerExeName).exe" 
+            $ConfigRunCommand = "$($ServerExeName).exe $($map)" 
         }
         "Editor" {
 
