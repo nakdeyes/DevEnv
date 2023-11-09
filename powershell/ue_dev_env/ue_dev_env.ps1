@@ -707,6 +707,7 @@ function run
         [string]$buildSpec      = "cli",
         [string]$buildConfig    = "dev",
         [string]$map            = "",
+        [string]$mode           = "",
         [bool]$useInsights      = 0,
         [bool]$replay           = 0,
         [bool]$clientConnect    = 1,
@@ -728,12 +729,22 @@ function run
         return
     }
 
+    $mapTravelArgs = "?StartPreRoundId=NoPreround"
+    if ($map -ne "")
+    {
+      $mapTravelArgs = $mapTravelArgs + "?StartMapId=$($map)"
+    }
+    if ($mode -ne "")
+    {
+      $mapTravelArgs = $mapTravelArgs + "?StartModeId=$($mode)"
+    }
+
     switch ($BuildSpecID)
     {   
         "Client" {
             $ClientExeName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)-Win64-$($BuildConfigID)", "$($UE_ProjectName)", "$($UE_ProjectName)Client") -FilePostfix:".exe" -Path:"$($UE_ProjectDirectory)\Binaries\Win64"
 
-            $ConfigRunCommand = "$($ClientExeName).exe $($map)"
+            $ConfigRunCommand = "$($ClientExeName).exe $($mapTravelArgs)"
             
             if ($clientConnect -eq 1)
             {
@@ -743,7 +754,7 @@ function run
         }
         "Server" {
             $ServerExeName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)Server-Win64-$($BuildConfigID)", "$($UE_ProjectName)Server-$($BuildConfigID)", "$($UE_ProjectName)Server") -FilePostfix:".exe" -Path:"$($UE_ProjectDirectory)\Binaries\Win64"
-            $ConfigRunCommand = "$($ServerExeName).exe $($map)" 
+            $ConfigRunCommand = "$($ServerExeName).exe $($mapTravelArgs)" 
         }
         "Editor" {
 
