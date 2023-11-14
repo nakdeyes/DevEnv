@@ -360,6 +360,10 @@ function env_install_prereqs()
     winget install JanDeDobbeleer.OhMyPosh
     Write-Host " **** Installing Prereq - Terminal-Icons **** "
     Install-Module -Name Terminal-Icons -Repository PSGallery -Scope CurrentUser
+
+    Write-Host " **** Installing Prereq - Internet Connection Sharing scripts **** "
+    Install-Module -Name PSInternetConnectionSharing
+
     Write-Host " **** Installing Prereq - CascadiaCode fonts **** "
 
     $TempZipDir = "$DevEnvPsScriptRoot\assets\temp"
@@ -1521,13 +1525,21 @@ function exp
 function net_adapter_reset
 {
     # Disable Net adapters
-    [string]$ExeCommand = "Disable-NetAdapter -Name 'Ethernet 2'; sleep 3; Enable-NetAdapter -Name 'Ethernet 2'; sleep 2"
-
-    Write-Host " Disable Command: '$ExeCommand'"
-    Start-Process powershell -Verb runAs -ArgumentList $("" + $ExeCommand)
+    [string]$ExeCommand = "Disable-Ics"
+    #if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    #    Start-Process wt -Verb RunAs "-NoProfile -ExecutionPolicy Bypass -Command `"cd '$pwd'; & '$PSCommandPath';`"";
+    #    break;
+    #}
+    #Write-Host " Disable Command: '$ExeCommand'"
+    #Start-Process wt -Verb runAs -ArgumentList $("" + $ExeCommand)
+    
+    Write-Host " Disable ICS..."
+    Disable-Ics
+    sleep 3;
+    Write-Host " Enable ICS $($ProfileConfig.ShareSourceNetAdapterName) -> $($ProfileConfig.ShareTargetNetAdapterName)..."
+    Set-Ics $($ProfileConfig.ShareSourceNetAdapterName) $($ProfileConfig.ShareTargetNetAdapterName)
+    sleep 1;
 }
-
-
 
 ## Kill Apps
 function kvs

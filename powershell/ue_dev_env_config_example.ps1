@@ -23,6 +23,8 @@ $global:WorkspaceD | Add-Member -type NoteProperty -name "EnginePath" -value "D:
 # Global Config values
 $global:ProfileConfig = New-Object System.Object
 $global:ProfileConfig | Add-Member -type NoteProperty -name "P4ParallelSyncThreads" -value 12
+$global:ProfileConfig | Add-Member -type NoteProperty -name "ShareSourceNetAdapterName" -value "Ethernet 3"
+$global:ProfileConfig | Add-Member -type NoteProperty -name "ShareTargetNetAdapterName" -value "Ethernet 4"
 
 # Misc App paths
 $global:EnvPaths = New-Object System.Object
