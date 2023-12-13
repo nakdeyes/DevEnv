@@ -714,8 +714,15 @@ function run
         [string]$mode           = "",
         [bool]$useInsights      = 0,
         [bool]$replay           = 0,
-        [bool]$clientConnect    = 1,
-        [bool]$log              = 1
+        [bool]$log              = 1,
+
+        #options generally only usable on the client
+        [int]$client_count      = 1,
+        [bool]$client_connect    = 1,
+        [int]$client_posX       = 0,
+        [int]$client_posY       = 30,
+        [int]$client_resX       = 1280,
+        [int]$client_resY       = 720
     )
 
     ## TODO: Multi platform support? 
@@ -733,7 +740,39 @@ function run
         return
     }
 
-    $mapTravelArgs = "?StartPreRoundId=NoPreround"
+    if ($client_count -gt 1)
+    {
+        # very special case for multiple clients - kick off X many recursive client 'run' calls! ( entirely so we can provide differnt window locations )
+        $baseClientRunCommand = "run -buildSpec:$buildSpec -buildConfig:$buildConfig -useInsights:$("$")$useInsights -replay:$("$")$replay "
+        $baseClientRunCommand = $baseClientRunCommand + " -client_connect:$("$")$client_connect -log:$("$")$log -client_count:1 -client_resX:$client_resX -client_resY:$client_resY "
+
+        if ($map -ne "")
+        {
+           $baseClientRunCommand = $baseClientRunCommand + "-map:$map "
+        }
+        if ($mode -ne "")
+        {
+           $baseClientRunCommand = $baseClientRunCommand + "-mode:$mode "
+        }
+
+        For ([int]$clientIndex = 0; $clientIndex -lt $client_count; $clientIndex++) {
+            $clientInstanceX = 0;
+            $clientInstanceY = 0;
+
+            # Write-Host " XPosMult: $([math]::floor(($clientIndex) / 2)) .. YPosMult: $(( $clientIndex) % 2)"
+            $clientInstanceX = $client_posX + ( ( $client_resX + 5 ) * ([math]::floor(($clientIndex) / 2)) )
+            $clientInstanceY = $client_posY + ( ( $client_resY + 5 ) * (( $clientIndex) % 2) )
+
+            $clientRunCommand = $baseClientRunCommand + "-client_posX:$clientInstanceX -client_posY:$clientInstanceY"
+            ## Write-Host "run command: '$clientRunCommand'"
+
+            Invoke-Expression $($clientRunCommand)
+        }
+
+        return
+    }
+
+    $mapTravelArgs = ""
     if ($map -ne "")
     {
       $mapTravelArgs = $mapTravelArgs + "?StartMapId=$($map)"
@@ -748,15 +787,17 @@ function run
         "Client" {
             $ClientExeName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)-Win64-$($BuildConfigID)", "$($UE_ProjectName)", "$($UE_ProjectName)Client") -FilePostfix:".exe" -Path:"$($UE_ProjectDirectory)\Binaries\Win64"
 
-            $ConfigRunCommand = "$($ClientExeName).exe $($mapTravelArgs)"
+            $ConfigRunCommand = "$($ClientExeName).exe"
             
-            if ($clientConnect -eq 1)
+            if ($client_connect -eq 1)
             {
-                $ConfigRunCommand = $ConfigRunCommand + " 127.0.0.1 ? service_uri=premium.firewalkcloud.com"
+                #$ConfigRunCommand = $ConfigRunCommand + " 127.0.0.1 ? service_uri=premium.firewalkcloud.com"
+                $ConfigRunCommand = $ConfigRunCommand + " 127.0.0.1"
             }
-            $ConfigRunCommand = $ConfigRunCommand + " -WINDOWED -ResX=1280 -ResY=720 -WinX=0 -WinY=30"
+            $ConfigRunCommand = $ConfigRunCommand + " $($mapTravelArgs) -WINDOWED -ResX=$client_resX -ResY=$client_resY -WinX=$client_posX -WinY=$client_posY"
         }
         "Server" {
+            $mapTravelArgs = $mapTravelArgs + "?StartPreRoundId=NoPreround"
             $ServerExeName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)Server-Win64-$($BuildConfigID)", "$($UE_ProjectName)Server-$($BuildConfigID)", "$($UE_ProjectName)Server") -FilePostfix:".exe" -Path:"$($UE_ProjectDirectory)\Binaries\Win64"
             $ConfigRunCommand = "$($ServerExeName).exe $($mapTravelArgs)" 
         }
