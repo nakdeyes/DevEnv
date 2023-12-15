@@ -1605,6 +1605,48 @@ function hard_shutdown
     shutdown /s /f /t 0
 }
 
+function Generate-BitsTransfer-List
+{
+    Param
+    (
+        [string]$SourceFilePath = "",
+        [string]$OutFilePath = "",
+        [string]$DownloadDir = "",
+        [string]$SwapStrings = "%20|_|%28|(|%29|)|%2C|,|%27|'|%26|&"
+    )
+
+    # Read in source file content
+    $FileContents = Get-Content -Path $SourceFilePath
+ 
+    # OutFile header
+    $OutFileContents = "Source, Destination"
+
+    # Create download dir if not exist
+    New-Item -ItemType Directory -Force -Path $($DownloadDir)
+
+    # Tokenize swapstrings
+    $SwapStringArray = $SwapStrings.Split("|")
+ 
+    # Read the file line by line
+    $i = 1
+    ForEach ($Line in $FileContents) {
+        $FileName = $Line.Substring($Line.LastIndexOf('/') + 1)
+
+        for ($i=0; $i -lt $SwapStringArray.Length; $i += 2) {
+            $FileName = $FileName.Replace($($SwapStringArray[$i]), $($SwapStringArray[$i+1]))
+        }
+
+        $DownloadPath = "$($DownloadDir)\$($FileName)"
+        $OutFileContents += "`n$($Line),$($DownloadPath)"
+        $i++
+    }
+
+    Clear-Content $OutFilePath
+    $OutFileContents >> $OutFilePath
+
+    Write-Host "Import-Csv $($OutFilePath) | Start-BitsTransfer"
+}
+
 ## Defaults - Do it here so all functions are defined.
 dev a
 
