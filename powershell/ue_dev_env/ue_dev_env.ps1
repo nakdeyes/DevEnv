@@ -1611,8 +1611,11 @@ function Generate-BitsTransfer-List
     (
         [string]$SourceFilePath = "",
         [string]$OutFilePath = "",
+        [string]$SourceDownloadDir = "",
         [string]$DownloadDir = "",
-        [string]$SwapStrings = "%20|_|%28|(|%29|)|%2C|,|%27|'|%26|&"
+        [string]$SwapStrings = "%20|_|%28|(|%29|)|%2C|,|%27|'|%26|&|&amp;|&",
+        [bool]$DoSpew = 0,
+        [bool]$DoDownload = 0
     )
 
     # Read in source file content
@@ -1629,20 +1632,89 @@ function Generate-BitsTransfer-List
  
     # Read the file line by line
     $i = 1
+    #format.. look for these lines and clean them up: 
+    # <td><a href="Champions%20-%20Return%20to%20Arms%20%28USA%29%20%28v1.01%29.chd">Champions - Return to Arms (USA) (v1.01).chd</a></td>
     ForEach ($Line in $FileContents) {
-        $FileName = $Line.Substring($Line.LastIndexOf('/') + 1)
+        $StartDownloadFilenameIndex = $Line.IndexOf("a href=")
+        if ($StartDownloadFilenameIndex -gt 0)
+        {
+          $StartDownloadFilenameIndex = $StartDownloadFilenameIndex + 9
+          $EndDownloadFilenameIndex = $Line.IndexOf("`">", $StartDownloadFilenameIndex)
 
-        for ($i=0; $i -lt $SwapStringArray.Length; $i += 2) {
-            $FileName = $FileName.Replace($($SwapStringArray[$i]), $($SwapStringArray[$i+1]))
+          $StartLocalFilenameIndex = $EndDownloadFilenameIndex + 2
+          $EndLocalFilenameIndex = $Line.IndexOf("</a>")
+        
+          $SourceFilename = $Line.Substring($StartLocalFilenameIndex, ($EndLocalFilenameIndex - $StartLocalFilenameIndex))
+          $DestFilename = $Line.Substring($StartLocalFilenameIndex, ($EndLocalFilenameIndex - $StartLocalFilenameIndex))
+
+          for ($i=0; $i -lt $SwapStringArray.Length; $i += 2) {
+              $SourceFilename = $SourceFilename.Replace($($SwapStringArray[$i]), $($SwapStringArray[$i+1]))
+              $DestFilename = $DestFilename.Replace($($SwapStringArray[$i]), $($SwapStringArray[$i+1]))
+          }
+
+          $DownloadSourcePath = "$($SourceDownloadDir)/$($SourceFilename)"
+          $DownloadDestPath = "$($DownloadDir)\$($DestFilename)"
+          $OutFileContents += "`n`"$($DownloadSourcePath)`",`"$($DownloadDestPath)`""
+
+          $i++
         }
-
-        $DownloadPath = "$($DownloadDir)\$($FileName)"
-        $OutFileContents += "`n$($Line),$($DownloadPath)"
-        $i++
     }
 
+    # Write Output file contents    
     Clear-Content $OutFilePath
     $OutFileContents >> $OutFilePath
+
+    # Read back in file contents, for spewing and manual downloading.
+    $OutFileContents = Get-Content -Path $OutFilePath
+
+    $TotalFiles = 0
+    ForEach ($Line in $OutFileContents) {
+       $TotalFiles++
+    }
+    # Remove 1 due to top line of .csv being header
+    $TotalFiles--
+
+    $FileNum = 0
+    ForEach ($Line in $OutFileContents) {
+       if ($FileNum -gt 0)
+       {
+         $CSVSeperatorIndex = $Line.IndexOf("`",`"")
+         $DownloadSourcePath = $Line.Substring(1, $CSVSeperatorIndex - 1)
+         $DownloadDestPath = $Line.Substring($CSVSeperatorIndex + 3, $Line.Length - $CSVSeperatorIndex - 4)
+
+         $FileExists = Test-Path $DownloadDestPath -PathType Leaf
+
+         #Write-Host " DownloadFile $($FileNum) / $($TotalFiles) url:'$($DownloadSourcePath)' -> '$($DownloadDestPath)' (Exists: '$($FileExists)')"
+
+         if (!$FileExists)
+         {
+           if ($DoSpew -ne 0)
+           {
+             Write-Host " DownloadFile $($FileNum) / $($TotalFiles) url:'$($DownloadSourcePath)' -> '$($DownloadDestPath)'"
+           }
+           if ($DoDownload -ne 0)
+           {
+             $DownloadCommand = "Start-BitsTransfer -Source:`"$($DownloadSourcePath)`" -Destination:`"$($DownloadDestPath)`""
+             #Write-Host "dl command: '$($DownloadCommand)'"
+             Invoke-Expression $($DownloadCommand)
+           }
+         }
+       }
+       $FileNum++
+    }
+
+
+#    ForEach ($Line in $FileContents) {
+#        $FileName = $Line.Substring($Line.LastIndexOf('/') + 1)
+
+#        for ($i=0; $i -lt $SwapStringArray.Length; $i += 2) {
+#            $FileName = $FileName.Replace($($SwapStringArray[$i]), $($SwapStringArray[$i+1]))
+#        }
+
+#        $DownloadPath = "$($DownloadDir)\$($FileName)"
+#        $OutFileContents += "`n$($Line),$($DownloadPath)"
+#        $i++
+#    }
 
     Write-Host "Import-Csv $($OutFilePath) | Start-BitsTransfer"
 }
