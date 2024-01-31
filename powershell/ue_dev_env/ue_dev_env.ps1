@@ -901,6 +901,17 @@ function package
     Invoke-Expression $PackageCommand
 }
 
+function build_multi
+{
+   vs_gen;
+   build e;
+   buildShaderCompilerWorker;
+   build c;
+   build s;
+   cook c;
+   cook s;
+}
+
 function make_installed_build
 {
     $BuildCommand = ". $UE_UAT BuildGraph -target=`"Make Installed Build Win64`" -script=`"Engine/Build/InstalledEngineBuild.xml`" -set:WithFullDebugInfo=true -UNATTENDED -set:WithDDC=false -set:SignExecutables=false -VS2019"
