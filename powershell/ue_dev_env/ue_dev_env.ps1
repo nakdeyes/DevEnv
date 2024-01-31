@@ -61,7 +61,7 @@ $BuildSpecs = @(
 
 $BuildConfigs = @(
 [PSCustomObject]@{ ID = 'Debug';        Aliases = @('debug', 'de')},
-[PSCustomObject]@{ ID = 'Development';  Aliases = @('development', 'dev')},
+[PSCustomObject]@{ ID = 'Development';  Aliases = @('development', 'dev', 'd')},
 [PSCustomObject]@{ ID = 'Shipping';     Aliases = @('shipping', 'ship', 's')},
 [PSCustomObject]@{ ID = 'Test';         Aliases = @('test', 'tst', 't')}
 )
@@ -1583,16 +1583,32 @@ function net_adapter_reset
 }
 
 ## Kill Apps
+function killTask
+{
+  Param
+  (
+     [string]$TaskName = ""
+  )
+
+  if ($TaskName -ne "")
+  {
+     Invoke-Expression "taskkill.exe /im $($TaskName) /t /f | Out-Null"
+     #Invoke-Expression "wmic process where name=`"$($TaskName)`" call terminate"
+  }
+}
+
 function kvs
 {
-    taskkill.exe /im devenv.exe /t /f | Out-Null
+    killTask "devenv.exe"
 }
 
 function kue
 {
-    Invoke-Expression "taskkill.exe /im $($UE_ProjectName).exe /t /f | Out-Null" 
-    Invoke-Expression "taskkill.exe /im $($UE_ProjectName)Server.exe /t /f | Out-Null"
-    Invoke-Expression "taskkill.exe /im UnrealEditor.exe /t /f | Out-Null"
+    killTask "$($UE_ProjectName).exe"
+    killTask "$($UE_ProjectName)Server.exe"
+    killTask "UnrealEditor.exe"
+    killTask "UnrealEditor-Cmd.exe"
+    killTask "ShaderCompileWorker.exe"
 }
 
 function hard_restart
