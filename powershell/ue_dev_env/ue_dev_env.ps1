@@ -849,7 +849,8 @@ function package
         [string]$config         = "test",
         [string]$platform       = "win64",
         [string]$archivePath    = "",
-        [bool]  $iterativeCook  = 1
+        [bool]  $iterativeCook  = 1,
+        [string]$additionalArgs = ""
     )
 
     $ConfigID = Get-ID-From-Alias $BuildConfigs $config
@@ -877,6 +878,11 @@ function package
     if ($iterative -eq 1)
     {
         $ConfigSpecificArgs = $ConfigSpecificArgs + " -iterativecooking"
+    }
+
+    if ($additionalArgs -ne "")
+    {
+      $ConfigSpecificArgs = $ConfigSpecificArgs + " $($additionalArgs) "
     }
 
     switch ($SpecID)
