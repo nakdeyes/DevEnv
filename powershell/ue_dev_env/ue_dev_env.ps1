@@ -880,6 +880,7 @@ function package
         $ConfigSpecificArgs = $ConfigSpecificArgs + " -iterativecooking"
     }
 
+    # meant to help provide args like: -UbtArgs="-ThinLTO -PGOProfile"
     if ($additionalArgs -ne "")
     {
       $ConfigSpecificArgs = $ConfigSpecificArgs + " $($additionalArgs) "
