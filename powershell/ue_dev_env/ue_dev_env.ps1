@@ -659,6 +659,7 @@ function cook
     (
         [string]$buildSpec      = "cli",
         [string]$buildConfig    = "dev",
+        [string]$cookMaps       = "",
         [bool]  $iterative      = 1
     )
 
@@ -692,6 +693,11 @@ function cook
     if ($iterative -eq 1)
     {
         $ConfigSpecificArgs = $ConfigSpecificArgs + " -iterativecooking"
+    }
+
+    if ($cookMaps -ne "")
+    {
+        $ConfigSpecificArgs = $ConfigSpecificArgs + " -map=`"$cookMaps`""
     }
 
     $CookCommand = ". $UE_UAT BuildCookRun -project=$($CurrentWorkspace.ProjectPath) -noP4 -unattended $ConfigSpecificArgs -cook"
@@ -906,6 +912,7 @@ function build_multi
    vs_gen;
    build e;
    buildShaderCompilerWorker;
+   buildUEInsights;
    build c;
    build s;
    cook c;
