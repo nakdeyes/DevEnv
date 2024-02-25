@@ -144,6 +144,7 @@ function dev_ue_set_paths
     $global:UE_Editor           = "$($CurrentWorkspace.EnginePath)\Engine\Binaries\Win64\UnrealEditor.exe"
     $global:UE_Insights         = "$($CurrentWorkspace.EnginePath)\Engine\Binaries\Win64\UnrealInsights.exe"
     $global:UE_BuildTool        = "$($CurrentWorkspace.EnginePath)\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.exe"
+    $global:UE_NetImGui         = "$($CurrentWorkspace.EnginePath)\Engine\Plugins\UnrealImGui\NetImguiServer\netImguiServer.exe"
 
     $global:UE_VSSolution = ""
     # check to see if project is inside UE dir or project dir
@@ -958,6 +959,58 @@ function rider
 function ueInsights
 {
     . $UE_Insights
+}
+
+function NetImGui
+{
+    . $UE_NetImGui
+}
+
+function csv_to_svg
+{
+  Param
+  (
+     [string]$csv = "",
+     [string]$svg = ""
+  )
+
+  if ($csv -eq "")
+  {
+    Microsoft.PowerShell.Utility\Write-Host " csv_to_svg: ERROR! Please supply a csv input file. " -NoNewLine -ForegroundColor "Red"
+    return
+  }
+  
+  if (!(Test-Path -Path $csv -PathType Leaf))
+  {
+    Microsoft.PowerShell.Utility\Write-Host " csv_to_svg: ERROR! Supplied CSV path '$($csv)' does not appear to be a valid file. " -NoNewLine -ForegroundColor "Red"
+    return
+  }
+  
+  if ($svg -eq "")
+  {
+    # If no svg output path supplied .. use the input path but .svg instead of .csv
+    $svg = $csv.replace("csv", "svg")
+  }
+
+  Write-Output " csv_to_svg . converting '$($csv)' -> '$($svg)'"
+
+  $title = "Test Title"
+  $CSVToSVGOption = "-showaverages -showmax -interactive -showEvents [GamePhase]*;[MatchStart]* -thickness 1 -csvs $csv -minY 0 -maxY 30 -budget 16.67 -title ""$title"""
+	$CSVToSVGStats = "-stats FrameTime;GameThreadTime;RenderThreadTime;GPUTime;Exclusive/GameThread/NetworkIncoming;Exclusive/GameThread/PrePhysicsMisc;Exclusive/GameThread/StartPhysicsMisc;Exclusive/GameThread/DuringPhysicsMisc;Exclusive/GameThread/EndPhysicsMisc;Exclusive/GameThread/PostPhysicsMisc;Exclusive/GameThread/TimeManager;Exclusive/GameThread/TickObjects;Exclusive/GameThread/ConditionalCollectGarbage"
+
+	$processName = "$($CurrentWorkspace.EnginePath)\Engine\Binaries\DotNET\CSVTools\CSVToSVG.exe"
+	$processArgs = $CSVToSVGOption+" -o "+$svg+" "+$CSVToSVGStats
+
+	start-process $processName -ArgumentList $processArgs -Wait -NoNewWindow
+
+	# Convert SVG to PNG
+	$pngFilename = $csv.replace("csv", "png")
+  $processName = "$($CurrentWorkspace.EnginePath)\Tools\CSVProfiler\magick.exe"
+	$processArgs = "convert -size 4096 $svg $pngFilename"
+
+  Write-Output "final command: '$($processName) $($processArgs)'"
+	start-process $processName -ArgumentList $processArgs -Wait -NoNewWindow
+
 }
 
 function ueCommandlet
