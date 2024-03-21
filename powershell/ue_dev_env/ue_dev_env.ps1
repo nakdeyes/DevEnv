@@ -1687,6 +1687,7 @@ function kue
     killTask "UnrealEditor.exe"
     killTask "UnrealEditor-Cmd.exe"
     killTask "ShaderCompileWorker.exe"
+    killTask "UnrealInsights.exe"
 }
 
 function hard_restart
