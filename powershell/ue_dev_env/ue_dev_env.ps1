@@ -801,7 +801,7 @@ function run
                 #$ConfigRunCommand = $ConfigRunCommand + " 127.0.0.1 ? service_uri=premium.firewalkcloud.com"
                 $ConfigRunCommand = $ConfigRunCommand + " 127.0.0.1"
             }
-            $ConfigRunCommand = $ConfigRunCommand + " $($mapTravelArgs) -WINDOWED -ResX=$client_resX -ResY=$client_resY -WinX=$client_posX -WinY=$client_posY"
+            $ConfigRunCommand = $ConfigRunCommand + " $($mapTravelArgs) -WINDOWED -ResX=$client_resX -ResY=$client_resY -WinX=$client_posX -WinY=$client_posY -NoPsPc"
         }
         "Server" {
             $mapTravelArgs = $mapTravelArgs + "?StartPreRoundId=NoPreround"
