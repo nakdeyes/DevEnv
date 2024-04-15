@@ -945,6 +945,31 @@ function package_server
     . $UE_UAT BuildCookRun -nop4 -project="$($CurrentWorkspace.ProjectPath)" -cook -stage -pak -prereqs -targetplatform=Win64 -build -CrashReporter -target=FWChaosServer -serverconfig=Development -utf8output -compile
 }
 
+function FWAutomation
+{
+   Param
+    (
+        [string]$outputDir      = "C:/dev/automationoutput",
+        [string]$devkitIP       = "10.120.100.65"
+    )
+
+    $AutomationScriptDir = "$($CurrentWorkspace.EnginePath)\Tools\AutomatedTests"
+    Push-Location $AutomationScriptDir
+
+    $AutomationScriptPath = "$($AutomationScriptDir)\CharacterPerfTest.py"
+    
+    $ServerExecutable = "$($UE_ProjectDirectory)\Binaries\Win64\FWChaosServer.exe"
+    $PSExecutable = "$($UE_ProjectDirectory)\Binaries\PS5\FWChaos-PS5-Test.self"
+
+    $AutomationCommand = ". python $($AutomationScriptPath) --outputdir $($outputDir) --workstationip $($devkitIP) --serverexe $($ServerExecutable) --elf $($PSExecutable)"
+
+    Write-Host "automation command: '$($AutomationCommand)'"
+
+    Invoke-Expression $AutomationCommand
+
+    Pop-Location
+}
+
 ## UE Stuff - launching
 function vs
 {
