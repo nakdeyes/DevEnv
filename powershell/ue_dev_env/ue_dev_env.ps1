@@ -950,7 +950,9 @@ function FWAutomation
    Param
     (
         [string]$outputDir      = "C:/dev/automationoutput",
-        [string]$devkitIP       = "10.120.100.65"
+        [string]$serverIP       = "10.120.100.65",
+        [string]$serverPath     = "",
+        [string]$PS5ElfPath     = ""
     )
 
     $AutomationScriptDir = "$($CurrentWorkspace.EnginePath)\Tools\AutomatedTests"
@@ -958,10 +960,17 @@ function FWAutomation
 
     $AutomationScriptPath = "$($AutomationScriptDir)\CharacterPerfTest.py"
     
-    $ServerExecutable = "$($UE_ProjectDirectory)\Binaries\Win64\FWChaosServer.exe"
-    $PSExecutable = "$($UE_ProjectDirectory)\Binaries\PS5\FWChaos-PS5-Test.self"
+    if ($serverPath -eq "")
+    {
+       $serverPath = "$($UE_ProjectDirectory)\Binaries\Win64\FWChaosServer.exe"
+    }
 
-    $AutomationCommand = ". python $($AutomationScriptPath) --outputdir $($outputDir) --workstationip $($devkitIP) --serverexe $($ServerExecutable) --elf $($PSExecutable)"
+    $AutomationCommand = ". python $($AutomationScriptPath) --outputdir $($outputDir) --workstationip $($serverIP) --serverexe $($serverPath)"
+
+    if ($PS5ElfPath -ne "")
+    {
+        $AutomationCommand = $AutomationCommand + " --elf $($PS5ElfPath)"
+    }
 
     Write-Host "automation command: '$($AutomationCommand)'"
 
