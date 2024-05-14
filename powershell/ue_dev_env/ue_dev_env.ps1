@@ -74,6 +74,8 @@ $BuildPlatforms = @(
 
 $ERR = "*error*"
 
+$ExternalWorkspaces = @{}
+
 # return a config ID given some alias
 function Get-ID-From-Alias
 {
@@ -722,10 +724,11 @@ function run
         [bool]$useInsights      = 0,
         [bool]$replay           = 0,
         [bool]$log              = 1,
+        [bool]$externalruntime  = 0,
 
         #options generally only usable on the client
         [int]$client_count      = 1,
-        [bool]$client_connect    = 1,
+        [bool]$client_connect   = 1,
         [int]$client_posX       = 0,
         [int]$client_posY       = 30,
         [int]$client_resX       = 1280,
@@ -789,10 +792,26 @@ function run
       $mapTravelArgs = $mapTravelArgs + "?StartModeId=$($mode)"
     }
 
+    # Generally, this is the local project binaries dir, but if we are using an external runtime, we can query that here.
+    $RuntimeDirectory = "$($UE_ProjectDirectory)\Binaries\Win64"
+    if ($externalruntime -ne 0)
+    {
+      $ContainsSpecInfo = $ExternalWorkspaces.Contains($BuildSpecID)
+      if ($ContainsSpecInfo -ne 0)
+      {
+        $RuntimeDirectory = $ExternalWorkspaces[$BuildSpecID]
+      }
+      else
+      {
+        Write-Host " !!! run told to run with an external runtime, but spec '$($BuildSpecID)' does not have one set. Try calling 'SetExternal $($BuildSpecID) <external_runtime_dir>'"
+        return
+      }
+    }
+
     switch ($BuildSpecID)
     {   
         "Client" {
-            $ClientExeName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)-Win64-$($BuildConfigID)", "$($UE_ProjectName)", "$($UE_ProjectName)Client") -FilePostfix:".exe" -Path:"$($UE_ProjectDirectory)\Binaries\Win64"
+            $ClientExeName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)-Win64-$($BuildConfigID)", "$($UE_ProjectName)", "$($UE_ProjectName)Client") -FilePostfix:".exe" -Path:"$($RuntimeDirectory)"
 
             $ConfigRunCommand = "$($ClientExeName).exe"
             
@@ -805,7 +824,7 @@ function run
         }
         "Server" {
             $mapTravelArgs = $mapTravelArgs + "?StartPreRoundId=NoPreround"
-            $ServerExeName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)Server-Win64-$($BuildConfigID)", "$($UE_ProjectName)Server-$($BuildConfigID)", "$($UE_ProjectName)Server") -FilePostfix:".exe" -Path:"$($UE_ProjectDirectory)\Binaries\Win64"
+            $ServerExeName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)Server-Win64-$($BuildConfigID)", "$($UE_ProjectName)Server-$($BuildConfigID)", "$($UE_ProjectName)Server") -FilePostfix:".exe" -Path:"$($RuntimeDirectory)"
             $ConfigRunCommand = "$($ServerExeName).exe $($mapTravelArgs)" 
         }
         "Editor" {
@@ -817,7 +836,7 @@ function run
         default { Write-Host "**HOW DID YOU GET HERE?!"; return; }
     }
 
-    $RunCommand = ". $($UE_ProjectDirectory)\Binaries\Win64\$($ConfigRunCommand)"
+    $RunCommand = ". $($RuntimeDirectory)\$($ConfigRunCommand)"
     if ($log -eq 1)
     {
         $RunCommand = $RunCommand + " -log"
@@ -977,6 +996,103 @@ function FWAutomation
     Invoke-Expression $AutomationCommand
 
     Pop-Location
+}
+
+## External runtime
+function SetExternal
+{
+  Param
+  (
+    [string]$spec     = "cli",
+    [string]$dir      = "F:/dev/externaldir"
+  )
+
+  $SpecID = Get-ID-From-Alias $BuildSpecs $spec
+
+  $ExternalWorkspaces[$SpecID] = $dir
+
+  Write-Host "Setting external dir for spec '$($SpecID)' to: '$($dir)'"
+}
+
+function GetExternal
+{
+  Param
+  (
+    [string]$spec     = "cli"
+  )
+
+  $SpecID = Get-ID-From-Alias $BuildSpecs $spec
+
+  $ContainsSpecInfo = $ExternalWorkspaces.Contains($SpecID)
+
+  $ExternalWorkspaceDir = ""
+  if ($ContainsSpecInfo -ne 0)
+  {
+    $ExternalWorkspaceDir = $ExternalWorkspaces[$SpecID]
+  }
+
+  Write-Host "External dir for spec '$($SpecID)' exists: $($ContainsSpecInfo) .. set to: '$($ExternalWorkspaceDir)'"
+}
+
+function PushExternalBins
+{
+  Param
+  (
+    [string]$buildSpec      = "cli",
+    [string]$buildConfig    = "dev"
+  )
+  
+  $BuildConfigID = Get-ID-From-Alias $BuildConfigs $buildConfig
+  if ($BuildConfigID -ieq $ERR)
+  {
+    Write-Host " !!! PushExternalBins given a config it does not understand ('$buildConfig'). Doing Nothing! Please select 'dev', 'test', 'ship' or some other supported build config."
+    return
+  }
+    
+  $BuildSpecID = Get-ID-From-Alias $BuildSpecs $buildSpec
+  if ($BuildSpecID -ieq $ERR)
+  {
+    Write-Host " !!! PushExternalBins given a spec it does not understand ('$buildSpec'). Doing Nothing! Please select 'client', 'server' or some other supported build spec."
+    return
+  }
+
+  $ContainsSpecInfo = $ExternalWorkspaces.Contains($BuildSpecID)
+  if ($ContainsSpecInfo -eq 0)
+  {
+    Write-Host " !!! PushExternalBins was given spec '$($BuildSpecID)', but no external runtime information has been set for that spec. Try calling 'SetExternal $($BuildSpecID) <external_runtime_dir>'"
+    return
+  }
+
+  $SourceExeName = ""
+
+  $SourceBinsDir = "$($UE_ProjectDirectory)\Binaries\Win64"
+
+  switch ($BuildSpecID)
+  {   
+    "Client" {
+      $SourceExeName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)-Win64-$($BuildConfigID)", "$($UE_ProjectName)", "$($UE_ProjectName)Client") -FilePostfix:".exe" -Path:"$($SourceBinsDir)"
+    }
+
+    "Server" {
+      $SourceExeName = FindFirstExistingFileAtPath -FilePrefixes:@("$($UE_ProjectName)Server-Win64-$($BuildConfigID)", "$($UE_ProjectName)Server-$($BuildConfigID)", "$($UE_ProjectName)Server") -FilePostfix:".exe" -Path:"$($SourceBinsDir)"
+    }
+
+    "Editor" { Write-Host "PushExternalBins only support client and server spec."; return; }
+
+    default  { Write-Host "**HOW DID YOU GET HERE?!"; return; }
+  }
+
+  $SourceExePath = "$($SourceBinsDir)\$($SourceExeName).exe"
+  $SourcePDBPath = "$($SourceBinsDir)\$($SourceExeName).pdb"
+
+  $DestinationDir = "$($ExternalWorkspaces[$BuildSpecID])\FWChaos\Binaries\Win64"
+
+  Write-Host "PushExternalBins '$($BuildConfigID)'|'$($BuildSpecID)' .. Source exe: '$($SourceExePath)' .. pdb: '$($SourcePDBPath)' to destination: '$($DestinationDir)'"
+  
+  Copy-Item -Path $SourceExePath -Destination $DestinationDir
+  Copy-Item -Path $SourcePDBPath -Destination $DestinationDir
+
+  Write-Host "  !! DONE !!"
 }
 
 ## UE Stuff - launching
