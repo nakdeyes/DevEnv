@@ -721,6 +721,7 @@ function run
         [string]$buildConfig    = "dev",
         [string]$map            = "",
         [string]$mode           = "",
+        [string]$appendArgs     = "",
         [bool]$useInsights      = 0,
         [bool]$replay           = 0,
         [bool]$log              = 1,
@@ -754,7 +755,7 @@ function run
     {
         # very special case for multiple clients - kick off X many recursive client 'run' calls! ( entirely so we can provide differnt window locations )
         $baseClientRunCommand = "run -buildSpec:$buildSpec -buildConfig:$buildConfig -useInsights:$("$")$useInsights -replay:$("$")$replay "
-        $baseClientRunCommand = $baseClientRunCommand + " -client_connect:$("$")$client_connect -log:$("$")$log -client_count:1 -client_resX:$client_resX -client_resY:$client_resY "
+        $baseClientRunCommand = $baseClientRunCommand + " -client_connect:$("$")$client_connect -log:$("$")$log -client_count:1 -appendArgs:$($appendArgs) -client_resX:$client_resX -client_resY:$client_resY -externalruntime:$("$")$externalruntime "
 
         if ($map -ne "")
         {
@@ -820,7 +821,7 @@ function run
                 #$ConfigRunCommand = $ConfigRunCommand + " 127.0.0.1 ? service_uri=premium.firewalkcloud.com"
                 $ConfigRunCommand = $ConfigRunCommand + " 127.0.0.1"
             }
-            $ConfigRunCommand = $ConfigRunCommand + " $($mapTravelArgs) -WINDOWED -ResX=$client_resX -ResY=$client_resY -WinX=$client_posX -WinY=$client_posY -NoPsPc"
+            $ConfigRunCommand = $ConfigRunCommand + " $($mapTravelArgs) -WINDOWED -ResX=$client_resX -ResY=$client_resY -WinX=$client_posX -WinY=$client_posY "
         }
         "Server" {
             $mapTravelArgs = $mapTravelArgs + "?StartPreRoundId=NoPreround"
@@ -851,6 +852,11 @@ function run
     if ($replay -eq 1)
     {
         $RunCommand = $RunCommand + " -pmreplay"
+    }
+
+    if ($appendArgs -ne "")
+    {
+      $RunCommand = $RunCommand + " $($appendArgs)"
     }
 
     Microsoft.PowerShell.Utility\Write-Host "      RUN: " -NoNewLine -ForegroundColor "DarkCyan"
