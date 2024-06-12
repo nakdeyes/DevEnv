@@ -1258,10 +1258,17 @@ function p4sync
     Param
     (
         [string]$changelist     = "",
-        [bool]  $reportSyncedCL = 1
+        [bool]  $reportSyncedCL = 1,
+        [bool]  $forceSync      = 0
     )
 
-    $SyncCommand = ". p4 sync --parallel=threads=$($ProfileConfig.P4ParallelSyncThreads) //..."
+    $SyncCommand = ". p4 sync"
+    if ($forceSync -ne 0)
+    {
+      $SyncCommand = "$($SyncCommand) -f"
+    }
+    $SyncCommand = "$($SyncCommand) --parallel=threads=$($ProfileConfig.P4ParallelSyncThreads) //..."
+
     if ($changelist -eq "")
     {
         Write-Host "  Sync to latest CL"
